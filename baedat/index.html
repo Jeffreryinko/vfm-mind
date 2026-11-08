@@ -362,7 +362,7 @@ const $ = (s, r=document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const TYPES = ["드립","공감","정보 보충","타임스탬프","반전·지적","응원·감사","밈 인용","질문","비판","이벤트 참여"];
 const TCOL = Object.fromEntries(TYPES.map((t,i) => [t, `var(--t${i+1})`]));
-const BASE = "../data/baedat/";
+const BASE = "/vendingForMe/data/baedat/";   // 배댓 자료는 시사 자판기 저장소에서 로봇이 만들어요 (유튜브 키가 거기 있음, 같은 주소라 바로 읽힘)
 const HIDE_KEY = "vfm:baedat:hide";
 let HIDE = new Set(); try{ HIDE = new Set(JSON.parse(localStorage.getItem(HIDE_KEY) || "[]")); }catch(_){}
 function saveHide(){ try{ localStorage.setItem(HIDE_KEY, JSON.stringify([...HIDE])); }catch(_){} }

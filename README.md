@@ -7,8 +7,6 @@
 
 | 부품 | 무엇 |
 |---|---|
-| `baedat/` | 한국 유튜브 월간 인기 영상 50개 × 배댓 10개. 자료 `data/baedat/<YYYY-MM>.json` |
+| `baedat/` | 한국 유튜브 월간 인기 영상 50개 × 배댓 10개. 자료는 **시사 자판기 저장소**의 `data/baedat/` 를 읽어요 (유튜브 키가 거기 있어서 로봇도 거기서 돌아요) |
 | `mental/` | 「멘탈리스트」 기술을 회차·장면별 카드로. 자료 `data/mental/` |
-| 배댓 로봇 `robot/baedat_run.py` | 매월 1일 05:23 지난달 판을 만들어요 (`baedat.yml`). 유형·감정은 낱말 규칙(로봇) — 예전 클로드 예약 작업 대신 |
-
-비밀 설정: 저장소 Settings → Secrets and variables → Actions → `YOUTUBE_API_KEY`
+| 배댓 로봇 | vendingForMe 저장소의 `robot/baedat_run.py` · `baedat.yml` (매월 1일 05:23) |
