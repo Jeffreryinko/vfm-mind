@@ -296,6 +296,19 @@ nav.tabs button[aria-current="page"]{color:var(--tint);font-weight:600}
 .rsub{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
 .rsub .linkb[disabled]{opacity:.35}
 .rhint{text-align:center;margin-top:0}
+/* 세로 영상 카드: 양옆 검은 칸 대신 흐린 배경, 넓은 화면(접는 폰 펼침·태블릿)에선 썸네일 왼쪽 · 글 오른쪽 */
+.rcard .media.v{position:relative;isolation:isolate}
+.rcard .media.v::before{content:"";position:absolute;inset:-30px;z-index:-1;background:var(--bgimg) center/cover no-repeat;filter:blur(28px) brightness(.55);transform:scale(1.1)}
+.rcard .media.v .th{height:min(56vh,520px)}
+.rcard .media.pl.v .player{height:min(56vh,520px)}
+@media (min-width:640px){
+  .rcard.vert{display:grid;grid-template-columns:auto 1fr;align-items:start}
+  .rcard.vert .media.v{grid-row:1 / span 2;height:100%;min-height:min(62vh,600px);align-items:center;padding:0}
+  .rcard.vert .media.v .th,.rcard.vert .media.pl.v .player{height:min(62vh,600px)}
+  .rcard.vert .media.v::before{display:none}
+  .rcard.vert .media.v{background:#000}
+  .rcard.vert .rcb{padding:18px 20px;min-width:0}
+}
 @media (prefers-reduced-motion:reduce){.rcard{transition:none}}
 .rate{display:flex;gap:6px;margin-top:2px}
 .rate button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:10px;padding:7px 4px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
@@ -623,8 +636,8 @@ function rawCard(c, V, left, total){
   const media = playing===c[0] ? lplayerHtml(c[0], S.lstart, S.lnonce)
     : `<button type="button" class="play" data-lplay="${esc(c[0])}" data-start="${st}" aria-label="영상 보기">${thumb(vv, `${st?`<span class="sh">${ts(st)}부터</span>`:""}<span class="pbtn" aria-hidden="true"></span>`)}</button>`;
   const R = S.RW[S.rawM]; const others = R && R.comments ? R.comments.filter(x => x[0]===c[0] && x[1]!==c[1]).slice(0,5) : [];
-  return `<div class="rdeck"><div class="rnext" aria-hidden="true"></div><article class="rcard" data-rcard="${esc(c[1])}">
-    <div class="media${playing===c[0]?" pl":""}${vert?" v":""}">${media}</div>
+  return `<div class="rdeck"><div class="rnext" aria-hidden="true"></div><article class="rcard${vert?" vert":""}" data-rcard="${esc(c[1])}">
+    <div class="media${playing===c[0]?" pl":""}${vert?" v":""}"${vert?` style="--bgimg:url('https://i.ytimg.com/vi/${encodeURIComponent(c[0])}/hqdefault.jpg')"`:""}>${media}</div>
     <div class="rcb">
       <div class="rwv">${esc(v[1])} · ${esc(v[4])} · 조회 ${kNum(v[3])}</div>
       <div class="rct">${esc(v[0])}</div>
