@@ -339,13 +339,19 @@ button.pill{border:0;cursor:pointer}
 .thead{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .thead .lead{margin:0}
 .tcard{margin-top:10px}
-.tcard .ttl{font-size:16px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
+.tcard .ttl{line-height:1.4;overflow-wrap:anywhere}
 .tline{margin:0;font-size:13.5px;color:var(--muted);line-height:1.45}
 .tcl{list-style:none;margin:4px 0 0;padding:0;border-top:.5px solid var(--sep)}
 .tc{padding:10px 0;border-bottom:.5px solid var(--sep)}
 .tc:last-child{border-bottom:0}
-.tc p{margin:0;font-size:16px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
-.tc .trep{font-size:13.5px;color:var(--muted);margin-top:4px;padding-left:12px}
+.tcl{counter-reset:tc}
+.tc{counter-increment:tc;position:relative;padding-left:30px}
+.tc::before{content:counter(tc);position:absolute;left:0;top:12px;width:21px;height:21px;border-radius:7px;background:var(--fill);color:var(--muted);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.tc:first-child::before{background:var(--tint);color:#fff}
+.tc>p:first-child{margin:0;font-family:var(--display);font-size:18.5px;font-weight:700;line-height:1.45;letter-spacing:-.01em;white-space:pre-wrap;overflow-wrap:anywhere}
+.tc:first-child>p:first-child{font-size:21px}
+.tc .trep{margin:5px 0 0;font-size:13.5px;line-height:1.45;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tcard .ttl{font-size:14px;font-weight:600;color:var(--muted)}
 .tcm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
 .tcm .pill{border:0;cursor:pointer;font:inherit;font-size:12px;font-weight:600}
 .trate{margin-left:auto;display:flex;gap:4px}
@@ -357,7 +363,7 @@ button.pill{border:0;cursor:pointer}
 .tnav .btn{flex:1;padding:12px 14px;font-size:15.5px}
 .tnav .btn:disabled{opacity:.4}
 .tend{margin-top:12px}
-@media (max-width:639px){.tcard .media.v .th{height:min(42vh,400px)}}
+@media (max-width:639px){.tcard .media.v .th{height:min(34vh,330px)}.tcard .media:not(.v){max-height:30vh}}
 #toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:rgba(30,30,30,.92);color:#fff;padding:9px 15px;border-radius:14px;font-size:13.5px;z-index:40;max-width:90vw;text-align:center}
 @media (prefers-reduced-motion:reduce){.th img{transition:none}}
 </style>
@@ -402,7 +408,7 @@ const BASE = "/vendingForMe/data/baedat/";   // 배댓 자료는 시사 자판�
 const HIDE_KEY = "vfm:baedat:hide";
 let HIDE = new Set(); try{ HIDE = new Set(JSON.parse(localStorage.getItem(HIDE_KEY) || "[]")); }catch(_){}
 function saveHide(){ try{ localStorage.setItem(HIDE_KEY, JSON.stringify([...HIDE])); }catch(_){} }
-const S = {months:[], eds:{}, month:null, cplay:null, view:"today", vmode:"legend", led:"best", LE:{}, RW:{}, rawM:null, rawSort:"likes", rawN:100, rawQ:"", rawF:"todo", rawView:"card", rawSkip:new Set(), rawHist:[], lt:"all", rev:new Set(), lstart:0, lnonce:0, pick:null, LG:null, vf:"all", vsort:"rank", cf:"all", sort:"likes", db:null, saved:{}, canWrite:false, mode:"loading", updatedAt:null, open:new Set()};
+const S = {months:[], eds:{}, month:null, cplay:null, view:"today", vview:"card", vi:0, vmode:"legend", led:"best", LE:{}, RW:{}, rawM:null, rawSort:"likes", rawN:100, rawQ:"", rawF:"todo", rawView:"card", rawSkip:new Set(), rawHist:[], lt:"all", rev:new Set(), lstart:0, lnonce:0, pick:null, LG:null, vf:"all", vsort:"rank", cf:"all", sort:"likes", db:null, saved:{}, canWrite:false, mode:"loading", updatedAt:null, open:new Set()};
 
 // ───────── 형식 도우미 ─────────
 const nf = new Intl.NumberFormat("ko-KR");
@@ -746,9 +752,10 @@ function rawCardRate(id, n){
   document.addEventListener("click", e => { if(Date.now() - swiped < 400){ e.stopPropagation(); e.preventDefault(); } }, true);   // 밀고 난 직후의 눌림은 무시
   document.addEventListener("pointerdown", e => { const c = e.target.closest && e.target.closest(".rcard"); if(!c || e.target.closest("a,iframe")) return; el = c; sx = e.clientX; sy = e.clientY; dx = 0; el.style.transition = "none"; });
   document.addEventListener("pointermove", e => { if(!el) return; dx = e.clientX - sx; const dy = e.clientY - sy; if(Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 12) return; el.style.transform = `translateX(${dx}px) rotate(${dx/18}deg)`; el.classList.toggle("lean-r", dx > 40); el.classList.toggle("lean-l", dx < -40); });
-  const end = () => { if(!el) return; const c = el, d = dx; el = null; c.style.transition = ""; if(Math.abs(d) > 90){ swiped = Date.now(); if(c.dataset.tcard){ c.style.transform = ""; todayStep(d < 0 ? 1 : -1); } else rawCardRate(c.dataset.rcard, d > 0 ? 3 : 1); } else { c.style.transform = ""; c.classList.remove("lean-r", "lean-l"); } };
+  const end = () => { if(!el) return; const c = el, d = dx; el = null; c.style.transition = ""; if(Math.abs(d) > 90){ swiped = Date.now(); if(c.dataset.tcard){ c.style.transform = ""; todayStep(d < 0 ? 1 : -1); } else if(c.dataset.mcard){ c.style.transform = ""; monthStep(d < 0 ? 1 : -1); } else rawCardRate(c.dataset.rcard, d > 0 ? 3 : 1); } else { c.style.transform = ""; c.classList.remove("lean-r", "lean-l"); } };
   document.addEventListener("pointerup", end); document.addEventListener("pointercancel", end);
-  document.addEventListener("keydown", e => { if(S.view==="today" && !(e.target.closest && e.target.closest("input,textarea,select"))){ if(e.key==="ArrowRight"){ e.preventDefault(); todayStep(1); } else if(e.key==="ArrowLeft"){ e.preventDefault(); todayStep(-1); } return; }
+  document.addEventListener("keydown", e => { if(S.view==="videos" && S.vmode==="month" && S.vview==="card" && !(e.target.closest && e.target.closest("input,textarea,select"))){ if(e.key==="ArrowRight"){ e.preventDefault(); monthStep(1); } else if(e.key==="ArrowLeft"){ e.preventDefault(); monthStep(-1); } return; }
+    if(S.view==="today" && !(e.target.closest && e.target.closest("input,textarea,select"))){ if(e.key==="ArrowRight"){ e.preventDefault(); todayStep(1); } else if(e.key==="ArrowLeft"){ e.preventDefault(); todayStep(-1); } return; }
     if(S.view!=="videos" || S.led!=="raw" || S.rawView!=="card" || (e.target.closest && e.target.closest("input,textarea,select"))) return; const c = document.querySelector(".rcard"); if(!c) return;
     const n = {"1":1, "2":2, "3":3, ArrowLeft:1, ArrowRight:3, ArrowUp:2}[e.key]; if(n){ e.preventDefault(); rawCardRate(c.dataset.rcard, n); } });
 })();
@@ -898,9 +905,39 @@ function viewVideos(){
     <p class="lead">${monthKo(e.month)} 인기 영상</p>
     <div class="chips" role="group" aria-label="영상 거르기">${[["all",`전체 ${vids(e).length}`],["long","쇼츠 빼기"],["short","쇼츠만"],...cats.map(c=>[c,c])].map(([k,n]) => `<button class="chip" type="button" data-vf="${esc(k)}" aria-pressed="${S.vf===k}">${esc(n)}</button>`).join("")}</div>
     <div class="chips" role="group" aria-label="정렬">${[["rank","조회수 순위"],["likes","배댓 좋아요 순"]].map(([k,n]) => `<button class="chip" type="button" data-vsort="${k}" aria-pressed="${S.vsort===k}">${n}</button>`).join("")}</div>
-    <p class="note">${list.length}개 영상 · 카드마다 배댓 10개 · 썸네일을 누르면 여기서 바로 재생돼요</p>
-    <div class="stack vlist" style="gap:16px">${list.map(vCard).join("") || `<p class="note">해당하는 영상이 없어요.</p>`}</div>
+    <div class="seg2" role="group" aria-label="보기"><button type="button" data-vview="card" aria-pressed="${S.vview==="card"}">카드로 넘기기</button><button type="button" data-vview="list" aria-pressed="${S.vview!=="card"}">목록으로 보기</button></div>
+    ${S.vview==="card" ? monthDeck(list, e) : `<p class="note">${list.length}개 영상 · 카드마다 배댓 10개 · 썸네일을 누르면 여기서 바로 재생돼요</p>
+    <div class="stack vlist" style="gap:16px">${list.map(vCard).join("") || `<p class="note">해당하는 영상이 없어요.</p>`}</div>`}
     ${e.skipped?`<p class="note">건너뛴 영상: 한국 채널 아님 ${e.skipped.not_kr||0} · 댓글 꺼짐 ${e.skipped.comments_off||0} · 댓글 없음 ${e.skipped.no_comments||0}</p>`:""}`;
+}
+
+// 월간 인기 영상 카드: 한 장씩, 옆으로 밀거나 다음으로 넘김
+let MLIST = [];
+function monthDeck(list, e){
+  MLIST = list; if(!list.length) return `<p class="note">해당하는 영상이 없어요.</p>`;
+  const n = list.length; S.vi = Math.max(0, Math.min(n, S.vi|0));
+  const prog = `<div class="rprog"><span style="width:${Math.round(S.vi/n*1000)/10}%"></span></div>`;
+  if(S.vi >= n){ const i = S.months.indexOf(e.month), prev = S.months[i-1];
+    return prog + `<div class="card tend"><p class="lead">${monthKo(e.month)} 끝</p><p>영상 ${n}개를 다 넘겼어요.</p><div class="btnrow">${prev?`<button class="btn" type="button" data-month="${esc(prev)}">${monthKo(prev)}로</button>`:""}<button class="btn ghost" type="button" data-mfirst>처음부터 다시</button></div></div>`; }
+  const v = list[S.vi], vert = isV(v);
+  const media = playing===v.id ? lplayerHtml(v.id, S.lstart, S.lnonce)
+    : `<button type="button" class="play" data-lplay="${esc(v.id)}" data-start="0" aria-label="${esc(v.title)} 재생">${thumb(v, `<span class="rk">${v.rank}</span>${v.dur?`<span class="dur">${dur(v.dur)}</span>`:""}<span class="pbtn" aria-hidden="true"></span>`, true)}</button>`;
+  const cm = c => { const st = tsSec(c.text); return `<li class="tc"><p>${esc(c.text)}</p><div class="tcm"><span class="note">좋아요 ${kNum(c.likes)}${c.replies?` · 답글 ${kNum(c.replies)}`:""}</span>${st?`<button type="button" class="pill acc" data-lplay="${esc(v.id)}" data-start="${st}">▶ ${ts(st)} 장면</button>`:""}
+    <span class="trate" role="group" aria-label="호감도">${[[3,"🤣","최고"],[2,"🙂","괜찮"],[1,"😐","별로"]].map(([k,em,l]) => `<button type="button" data-rate="${esc(c.id)}" data-n="${k}" aria-pressed="${LGU.rate[c.id]===k}" aria-label="${l}">${em}</button>`).join("")}</span></div></li>`; };
+  return prog + `<article class="rcard tcard${vert?" vert":""}" data-mcard="${esc(v.id)}">
+    <div class="media${playing===v.id?" pl":""}${vert?" v":""}"${vert?` style="--bgimg:url('https://i.ytimg.com/vi/${encodeURIComponent(v.id)}/hqdefault.jpg')"`:""}>${media}</div>
+    <div class="rcb">
+      <div class="rwv">${v.rank}위 · ${esc(v.channel)} · ${esc(v.category||"")} · ${ymd(v.publishedAt)} · 조회 ${kNum(v.views)}</div>
+      <div class="ttl">${esc(v.title)}</div>
+      <ol class="tcl">${v.best.map(cm).join("")}</ol>
+      <div class="tfoot"><a href="${watch(v.id)}" target="_blank" rel="noopener">유튜브에서 보기</a></div>
+    </div></article>
+  <div class="tnav"><button type="button" class="btn ghost" data-mprev ${S.vi?"":"disabled"}>‹ 이전</button><span class="note">${S.vi+1} / ${n}</span><button type="button" class="btn" data-mnext>${S.vi+1===n?"끝 ›":"다음 ›"}</button></div>
+  <p class="note rhint">옆으로 밀어도 넘어가요.</p>`;
+}
+function monthStep(d){
+  S.vi = Math.max(0, Math.min(MLIST.length, (S.vi|0) + d)); playing = null; draw();
+  const c = document.querySelector("#v-videos .tcard, #v-videos .tend"); if(c) c.scrollIntoView({block:"start"});
 }
 
 // ───────── 배댓 ─────────
@@ -1043,6 +1080,10 @@ document.addEventListener("click", e => {
   const t = e.target;
   const tab = t.closest("[data-v]"); if(tab){ go(tab.dataset.v); return; }
   if(t.closest("[data-tnext]")){ todayStep(1); return; }
+  if(t.closest("[data-mnext]")){ monthStep(1); return; }
+  if(t.closest("[data-mprev]")){ monthStep(-1); return; }
+  if(t.closest("[data-mfirst]")){ S.vi = 0; draw(); return; }
+  const vv0 = t.closest("[data-vview]"); if(vv0){ S.vview = vv0.dataset.vview; playing = null; draw(); return; }
   if(t.closest("[data-tprev]")){ todayStep(-1); return; }
   const tb = t.closest("[data-tblock]"); if(tb){ LGU.block[tb.dataset.tblock] = tb.dataset.name || 1; saveLGU(); toast("이 채널은 이제 안 나와요 · '내 기록'에서 되돌릴 수 있어요"); todayStep(1); return; }
   const tub = t.closest("[data-tunblock]"); if(tub){ delete LGU.block[tub.dataset.tunblock]; saveLGU(); draw(); return; }
@@ -1081,8 +1122,8 @@ document.addEventListener("click", e => {
   if(t.closest("[data-cclose]")){ S.cplay = null; const keep = window.scrollY; draw(); window.scrollTo(0, keep); return; }
   if(false){ (window.requestAnimationFrame || (f => setTimeout(f, 16)))(() => { const el = document.getElementById("vc-"+gt.dataset.goto); if(el) el.scrollIntoView({block:"start"}); }); return; }
   const mb = t.closest("[data-month]"); if(mb){ if(mb.dataset.month) selectMonth(mb.dataset.month); return; }
-  const vf = t.closest("[data-vf]"); if(vf){ S.vf = vf.dataset.vf; draw(); return; }
-  const vs = t.closest("[data-vsort]"); if(vs){ S.vsort = vs.dataset.vsort; draw(); return; }
+  const vf = t.closest("[data-vf]"); if(vf){ S.vf = vf.dataset.vf; S.vi = 0; draw(); return; }
+  const vs = t.closest("[data-vsort]"); if(vs){ S.vsort = vs.dataset.vsort; S.vi = 0; draw(); return; }
   const cf = t.closest("[data-cf]"); if(cf){ S.cf = cf.dataset.cf; draw(); return; }
   const so = t.closest("[data-sort]"); if(so){ S.sort = so.dataset.sort; draw(); return; }
   const dl = t.closest("[data-dl]"); if(dl){ download(dl.dataset.dl); return; }
@@ -1098,7 +1139,7 @@ async function loadMonth(m){
   S.eds[m] = await r.json(); return S.eds[m];
 }
 async function selectMonth(m){
-  try{ await loadMonth(m); S.month = m; S.vf="all"; S.cf="all"; chip(); draw(); }
+  try{ await loadMonth(m); S.month = m; S.vf="all"; S.cf="all"; S.vi = 0; chip(); draw(); }
   catch(_){ toast(`${monthKo(m)}판을 불러오지 못했어요`); }
 }
 function chip(){
