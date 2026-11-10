@@ -336,6 +336,28 @@ button.pill{border:0;cursor:pointer}
 .linkb[aria-pressed="true"]{font-weight:700}
 .vbadge{font-size:11.5px;font-weight:600;border-radius:999px;padding:1px 8px;background:rgba(52,199,89,.15);color:var(--green-t)}
 .vbadge.b{background:var(--orange-soft);color:var(--orange-t)}
+.thead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.thead .lead{margin:0}
+.tcard{margin-top:10px}
+.tcard .ttl{font-size:16px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
+.tline{margin:0;font-size:13.5px;color:var(--muted);line-height:1.45}
+.tcl{list-style:none;margin:4px 0 0;padding:0;border-top:.5px solid var(--sep)}
+.tc{padding:10px 0;border-bottom:.5px solid var(--sep)}
+.tc:last-child{border-bottom:0}
+.tc p{margin:0;font-size:16px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.tc .trep{font-size:13.5px;color:var(--muted);margin-top:4px;padding-left:12px}
+.tcm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+.tcm .pill{border:0;cursor:pointer;font:inherit;font-size:12px;font-weight:600}
+.trate{margin-left:auto;display:flex;gap:4px}
+.trate button{border:1px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:32px;font-size:17px;cursor:pointer;padding:0}
+.trate button[aria-pressed="true"]{background:var(--tint-soft);border-color:var(--tint)}
+.tfoot{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:13px}
+.tfoot a{color:var(--tint-t)}
+.tnav{position:sticky;bottom:calc(var(--nav-h, 62px) + env(safe-area-inset-bottom,0px));z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px;padding:10px 0}
+.tnav .btn{flex:1;padding:12px 14px;font-size:15.5px}
+.tnav .btn:disabled{opacity:.4}
+.tend{margin-top:12px}
+@media (max-width:639px){.tcard .media.v .th{height:min(42vh,400px)}}
 #toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:rgba(30,30,30,.92);color:#fff;padding:9px 15px;border-radius:14px;font-size:13.5px;z-index:40;max-width:90vw;text-align:center}
 @media (prefers-reduced-motion:reduce){.th img{transition:none}}
 </style>
@@ -350,7 +372,8 @@ button.pill{border:0;cursor:pointer}
 </header>
 
 <main class="wrap">
-  <section class="view" id="v-month"></section>
+  <section class="view" id="v-today"></section>
+  <section class="view" id="v-month" hidden></section>
   <section class="view" id="v-videos" hidden></section>
   <section class="view" id="v-best" hidden></section>
   <section class="view" id="v-stats" hidden></section>
@@ -359,7 +382,7 @@ button.pill{border:0;cursor:pointer}
 
 <nav class="tabs" aria-label="화면">
   <div class="in">
-    <button type="button" data-v="month" aria-current="page"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 9.5h16M9 3v4M15 3v4"/></svg><span>이번 달</span></button>
+    <button type="button" data-v="today" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg><span>오늘</span></button>
     <button type="button" data-v="videos"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="13" rx="3.5"/><path d="M10.5 9.2v5.6l4.6-2.8z"/></svg><span>영상</span></button>
     <button type="button" data-v="best"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg><span>배댓</span></button>
     <button type="button" data-v="stats"><svg viewBox="0 0 24 24"><path d="M5 20V10M10 20V5M15 20v-7M20 20v-4"/></svg><span>분석</span></button>
@@ -379,7 +402,7 @@ const BASE = "/vendingForMe/data/baedat/";   // 배댓 자료는 시사 자판�
 const HIDE_KEY = "vfm:baedat:hide";
 let HIDE = new Set(); try{ HIDE = new Set(JSON.parse(localStorage.getItem(HIDE_KEY) || "[]")); }catch(_){}
 function saveHide(){ try{ localStorage.setItem(HIDE_KEY, JSON.stringify([...HIDE])); }catch(_){} }
-const S = {months:[], eds:{}, month:null, cplay:null, view:"month", vmode:"legend", led:"best", LE:{}, RW:{}, rawM:null, rawSort:"likes", rawN:100, rawQ:"", rawF:"todo", rawView:"card", rawSkip:new Set(), rawHist:[], lt:"all", rev:new Set(), lstart:0, lnonce:0, pick:null, LG:null, vf:"all", vsort:"rank", cf:"all", sort:"likes", db:null, saved:{}, canWrite:false, mode:"loading", updatedAt:null, open:new Set()};
+const S = {months:[], eds:{}, month:null, cplay:null, view:"today", vmode:"legend", led:"best", LE:{}, RW:{}, rawM:null, rawSort:"likes", rawN:100, rawQ:"", rawF:"todo", rawView:"card", rawSkip:new Set(), rawHist:[], lt:"all", rev:new Set(), lstart:0, lnonce:0, pick:null, LG:null, vf:"all", vsort:"rank", cf:"all", sort:"likes", db:null, saved:{}, canWrite:false, mode:"loading", updatedAt:null, open:new Set()};
 
 // ───────── 형식 도우미 ─────────
 const nf = new Intl.NumberFormat("ko-KR");
@@ -486,7 +509,7 @@ function vCard(v){
 
 // ───────── 명댓글 감상 (영상 탭 기본 화면) ─────────
 const LG_KEY = "vfm:baedat:legend";
-let LGU = {fav:{}, mine:{}, rate:{}}; try{ LGU = Object.assign(LGU, JSON.parse(localStorage.getItem(LG_KEY) || "{}")); }catch(_){}
+let LGU = {fav:{}, mine:{}, rate:{}, seen:{}, block:{}, chs:{}}; try{ LGU = Object.assign(LGU, JSON.parse(localStorage.getItem(LG_KEY) || "{}")); }catch(_){}
 function saveLGU(){ try{ localStorage.setItem(LG_KEY, JSON.stringify(LGU)); }catch(_){} }
 const lmoms = () => (S.LG?.moments || []);
 function lList(){
@@ -607,10 +630,16 @@ function viewEdition(box, m){
     <div class="card"><p class="note">고르는 법: 유튜브 공식 API로 그달 한국 인기 영상을 모으고, 영상마다 인기순 댓글을 받아 '영상 덕분에 웃긴 한 줄'만 사람이 골랐어요. 원문은 바꾸지 않았고, 실존 인물 외모·사생활 공격, 노래 가사 인용, 정치·혐오 댓글은 뺐어요. 좋아요 수는 ${esc(E.checkedAt)} 기준이에요.</p></div>`;
 }
 // ───────── 원본 데이터 (검토 전 후보 댓글) ─────────
+const RWP = {};
+function loadRawP(m){
+  if(S.RW[m] && S.RW[m].comments) return Promise.resolve(S.RW[m]);
+  const e = (S.LG?.raws||[]).find(x => x.month===m); if(!e) return Promise.resolve(null);
+  return RWP[m] = RWP[m] || fetch(BASE + e.file, {cache:"no-store"}).then(r => r.ok ? r.json() : null).then(j => { if(j) S.RW[m] = j; else delete RWP[m]; return j; }).catch(() => { delete RWP[m]; return null; });
+}
 function loadRaw(m){
-  const e = (S.LG?.raws||[]).find(x => x.month===m); if(!e || S.RW[m]) return;
+  if(S.RW[m] && S.RW[m]!=="error") return;
   S.RW[m] = "loading";
-  fetch(BASE + e.file, {cache:"no-store"}).then(r => r.ok ? r.json() : null).then(j => { S.RW[m] = j || "error"; if(S.led==="raw") draw(); }).catch(() => { S.RW[m] = "error"; if(S.led==="raw") draw(); });
+  loadRawP(m).then(j => { S.RW[m] = j || "error"; if(S.led==="raw") draw(); });
 }
 // 내 취향순: 체크한 댓글(🤣·🙂 = 좋음, 😐 = 별로)의 글자 조각·채널·분야를 세어, 안 본 댓글을 닮은 순서로 줄 세움 (이 기기 안에서만 계산)
 function tasteFeats(c, V){
@@ -677,7 +706,7 @@ function viewRaw(box){
   const rateBtns = id => `<div class="rate" role="group" aria-label="호감도">${RT.map(([n,e,l]) => `<button type="button" data-rate="${esc(id)}" data-n="${n}" aria-pressed="${LGU.rate[id]===n}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</div>`;
   const row = (c, showV) => `<li class="rw" data-rid="${esc(c[1])}"><p>${esc(c[2])}</p><div class="lmeta"><span>좋아요 ${kNum(c[3])}</span><span>답글 ${kNum(c[4])}</span><span>${esc(c[5])}</span><a href="${at(c[0], c[1])}" target="_blank" rel="noopener">원문</a></div>${showV?`<div class="rwv">${esc(V[c[0]][1])} · ${esc(V[c[0]][0])}</div>`:""}${rateBtns(c[1])}</li>`;
   if(S.rawView==="card"){
-    let q2 = cs.filter(c => !LGU.rate[c[1]] && !S.rawSkip.has(c[1]));
+    let q2 = cs.filter(c => !LGU.rate[c[1]] && !S.rawSkip.has(c[1]) && !LGU.seen[c[0]]);
     let note = "";
     if(S.rawSort==="taste"){ const M = tasteModel(); if(M.n >= 10 && M.np && M.nn){ const sc = new Map(q2.map(c => [c, tasteScore(M, c, V)])); q2 = q2.slice().sort((a,b) => sc.get(b)-sc.get(a)); note = `<p class="note">체크한 ${M.n}개를 바탕으로 내가 좋아할 만한 것부터 나와요.</p>`; } else note = `<p class="note">10개 이상 체크하면 내 취향순으로 바뀌어요. 지금은 좋아요순이에요.</p>`; }
     else if(S.rawSort==="video"){ q2 = q2.slice().sort((a,b) => (V[b[0]]?.[3]||0)-(V[a[0]]?.[3]||0) || b[3]-a[3]); }
@@ -717,11 +746,111 @@ function rawCardRate(id, n){
   document.addEventListener("click", e => { if(Date.now() - swiped < 400){ e.stopPropagation(); e.preventDefault(); } }, true);   // 밀고 난 직후의 눌림은 무시
   document.addEventListener("pointerdown", e => { const c = e.target.closest && e.target.closest(".rcard"); if(!c || e.target.closest("a,iframe")) return; el = c; sx = e.clientX; sy = e.clientY; dx = 0; el.style.transition = "none"; });
   document.addEventListener("pointermove", e => { if(!el) return; dx = e.clientX - sx; const dy = e.clientY - sy; if(Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 12) return; el.style.transform = `translateX(${dx}px) rotate(${dx/18}deg)`; el.classList.toggle("lean-r", dx > 40); el.classList.toggle("lean-l", dx < -40); });
-  const end = () => { if(!el) return; const c = el, d = dx; el = null; c.style.transition = ""; if(Math.abs(d) > 90){ swiped = Date.now(); rawCardRate(c.dataset.rcard, d > 0 ? 3 : 1); } else { c.style.transform = ""; c.classList.remove("lean-r", "lean-l"); } };
+  const end = () => { if(!el) return; const c = el, d = dx; el = null; c.style.transition = ""; if(Math.abs(d) > 90){ swiped = Date.now(); if(c.dataset.tcard){ c.style.transform = ""; todayStep(d < 0 ? 1 : -1); } else rawCardRate(c.dataset.rcard, d > 0 ? 3 : 1); } else { c.style.transform = ""; c.classList.remove("lean-r", "lean-l"); } };
   document.addEventListener("pointerup", end); document.addEventListener("pointercancel", end);
-  document.addEventListener("keydown", e => { if(S.view!=="videos" || S.led!=="raw" || S.rawView!=="card" || (e.target.closest && e.target.closest("input,textarea,select"))) return; const c = document.querySelector(".rcard"); if(!c) return;
+  document.addEventListener("keydown", e => { if(S.view==="today" && !(e.target.closest && e.target.closest("input,textarea,select"))){ if(e.key==="ArrowRight"){ e.preventDefault(); todayStep(1); } else if(e.key==="ArrowLeft"){ e.preventDefault(); todayStep(-1); } return; }
+    if(S.view!=="videos" || S.led!=="raw" || S.rawView!=="card" || (e.target.closest && e.target.closest("input,textarea,select"))) return; const c = document.querySelector(".rcard"); if(!c) return;
     const n = {"1":1, "2":2, "3":3, ArrowLeft:1, ArrowRight:3, ArrowUp:2}[e.key]; if(n){ e.preventDefault(); rawCardRate(c.dataset.rcard, n); } });
 })();
+
+// ───────── 오늘: 하루 30장 묶음 (영상 한 장 = 배댓 최대 5개, 본 영상은 다시 안 나옴) ─────────
+const TODAY_N = 30, TKEY = "vfm:baedat:today";
+const kday = () => new Date(Date.now() + 9*3600e3).toISOString().slice(0,10);
+const dayNo = () => Math.floor((Date.now() + 9*3600e3) / 864e5);
+let TD = null; try{ TD = JSON.parse(localStorage.getItem(TKEY) || "null"); }catch(_){}
+function saveTD(){ try{ localStorage.setItem(TKEY, JSON.stringify(TD)); }catch(_){} }
+const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const shuf = (a, r) => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const chOf = v => v[7] || v[1];
+async function buildToday(round){
+  const raws = S.LG.raws || [], r = rng(dayNo() * 31 + round);
+  const live = raws.filter(x => x.live).map(x => x.month);
+  const older = shuf(raws.map(x => x.month).filter(m => !live.includes(m)), r).slice(0, 4 + round * 2);
+  const Rs = (await Promise.all([...new Set([...live, ...older])].map(loadRawP))).filter(Boolean);
+  const have = new Set((TD && TD.date===kday() ? TD.ids : []).map(x => x[0]));
+  const items = [];
+  Rs.forEach(R => { const by = {}; R.comments.forEach(c => (by[c[0]] = by[c[0]] || []).push(c));
+    Object.entries(R.videos).forEach(([vid, v]) => { const cs = (by[vid] || []).slice(0, 5); if(!cs.length || LGU.seen[vid] || LGU.block[chOf(v)] || have.has(vid) || cs.every(c => LGU.rate[c[1]])) return; items.push({vid, m:R.month, v, cs}); }); });
+  const now = Date.now(), isNew = x => (now - Date.parse(x.v[2])) / 864e5 <= 7;
+  const M = tasteModel(), useT = M.n >= 10 && M.np && M.nn;
+  const nw = items.filter(isNew).sort((a,b) => b.cs[0][3] - a.cs[0][3]);
+  let old = shuf(items.filter(x => !isNew(x)), r);
+  if(useT){ const sc = new Map(old.map(x => [x, x.cs.reduce((s,c) => s + tasteScore(M, c, {[x.vid]:x.v}), 0) / x.cs.length + r() * 3])); old.sort((a,b) => sc.get(b) - sc.get(a)); }
+  const pool = [...nw.slice(0, 12), ...old, ...nw.slice(12)], out = [], perCh = {}, perCat = {};
+  let fresh = 0;
+  const known = ch => !!LGU.chs[ch];
+  const ok = x => { const ch = chOf(x.v); return (perCh[ch]||0) < 2 && (perCat[x.v[4]]||0) < TODAY_N/2 && !(out.length && chOf(out[out.length-1].v)===ch); };
+  while(out.length < TODAY_N && pool.length){
+    const need = fresh < 6 && TODAY_N - out.length <= 6 - fresh;
+    let i = pool.findIndex(x => ok(x) && (!need || !known(chOf(x.v))));
+    if(i < 0 && need){ fresh = 6; continue; }
+    if(i < 0) i = pool.findIndex(x => !(out.length && chOf(out[out.length-1].v)===chOf(x.v)));
+    if(i < 0) break;
+    const x = pool.splice(i, 1)[0], ch = chOf(x.v); out.push(x);
+    perCh[ch] = (perCh[ch]||0) + 1; perCat[x.v[4]] = (perCat[x.v[4]]||0) + 1; if(!known(ch)) fresh++;
+  }
+  return out.map(x => [x.vid, x.m]);
+}
+let tdBusy = false;
+async function ensureToday(){
+  if(tdBusy) return; tdBusy = true;
+  try{
+    if(!TD || TD.date!==kday()){ TD = {date:kday(), ids:await buildToday(0), i:0, round:0}; saveTD(); }
+    await Promise.all([...new Set(TD.ids.map(x => x[1]))].map(loadRawP));
+  } finally { tdBusy = false; }
+  S.tdReady = kday(); if(S.view==="today") draw();
+}
+async function todayMore(){
+  const box = $("#v-today"); box.insertAdjacentHTML("beforeend", `<p class="note">창고에서 더 고르는 중이에요…</p>`);
+  TD.round = (TD.round||0) + 1; const more = await buildToday(TD.round);
+  if(!more.length){ toast("창고에 안 본 영상이 더 없어요"); draw(); return; }
+  TD.ids.push(...more); saveTD(); await Promise.all([...new Set(more.map(x => x[1]))].map(loadRawP)); draw(); window.scrollTo(0,0);
+}
+const tItem = i => { const [vid, m] = TD.ids[i] || []; const R = S.RW[m]; const v = R && R.videos ? R.videos[vid] : null; return v ? {vid, m, v, cs:R.comments.filter(c => c[0]===vid).slice(0,5)} : null; };
+function todayStep(d){
+  if(!TD) return;
+  if(d > 0 && TD.i < TD.ids.length){ const x = tItem(TD.i); if(x){ LGU.seen[x.vid] = dayNo(); const ch = chOf(x.v); LGU.chs[ch] = (LGU.chs[ch]||0) + 1; saveLGU(); } }
+  TD.i = Math.max(0, Math.min(TD.ids.length, TD.i + d)); saveTD(); playing = null; draw();
+  const c = document.querySelector(".tcard, .tend"); if(c) c.scrollIntoView({block:"start"}); else window.scrollTo(0,0);
+}
+function todayCard(x, i, n){
+  const {vid, v, cs} = x, vert = v[5] && v[5] < 1, vv = {id:vid, title:v[0], ar:v[5]};
+  const media = playing===vid ? lplayerHtml(vid, S.lstart, S.lnonce)
+    : `<button type="button" class="play" data-lplay="${esc(vid)}" data-start="0" aria-label="${esc(v[0])} 재생">${thumb(vv, `${v[6]?`<span class="dur">${dur(v[6])}</span>`:""}<span class="pbtn" aria-hidden="true"></span>`, true)}</button>`;
+  const cm = c => { const st = tsSec(c[2]); return `<li class="tc"><p>${esc(c[2])}</p>${(c[6]||[]).map(r => `<p class="trep">↳ ${esc(r[0])} <span>· ${kNum(r[1])}</span></p>`).join("")}
+    <div class="tcm"><span class="note">좋아요 ${kNum(c[3])}${c[4]?` · 답글 ${kNum(c[4])}`:""}</span>${st?`<button type="button" class="pill acc" data-lplay="${esc(vid)}" data-start="${st}">▶ ${ts(st)} 장면</button>`:""}
+    <span class="trate" role="group" aria-label="호감도">${[[3,"🤣","최고"],[2,"🙂","괜찮"],[1,"😐","별로"]].map(([k,e,l]) => `<button type="button" data-rate="${esc(c[1])}" data-n="${k}" aria-pressed="${LGU.rate[c[1]]===k}" aria-label="${l}">${e}</button>`).join("")}</span></div></li>`; };
+  const fresh = (Date.now() - Date.parse(v[2])) / 864e5 <= 7;
+  return `<article class="rcard tcard${vert?" vert":""}" data-tcard="${esc(vid)}">
+    <div class="media${playing===vid?" pl":""}${vert?" v":""}"${vert?` style="--bgimg:url('https://i.ytimg.com/vi/${encodeURIComponent(vid)}/hqdefault.jpg')"`:""}>${media}</div>
+    <div class="rcb">
+      <div class="rwv">${fresh?`<span class="vbadge">새 영상</span> `:""}${esc(v[1])} · ${esc(v[4]||"")} · ${esc(String(v[2]||"").slice(5).replace("-","."))} · 조회 ${kNum(v[3])}</div>
+      <div class="ttl">${esc(v[0])}</div>
+      ${v[8]?`<p class="tline">${esc(v[8])}</p>`:""}
+      <ol class="tcl">${cs.map(cm).join("")}</ol>
+      <div class="tfoot"><a href="${watch(vid)}" target="_blank" rel="noopener">유튜브에서 보기</a><button type="button" class="linkb" data-tblock="${esc(chOf(v))}" data-name="${esc(v[1])}">이 채널 그만 보기</button></div>
+    </div>
+  </article>
+  <div class="tnav"><button type="button" class="btn ghost" data-tprev ${i?"":"disabled"}>‹ 이전</button><span class="note">${i+1} / ${n}</span><button type="button" class="btn" data-tnext>${i+1===n?"끝 ›":"다음 ›"}</button></div>
+  <p class="note rhint">옆으로 밀어도 넘어가요. 넘긴 영상은 다시 안 나와요.</p>`;
+}
+function viewToday(){
+  const box = $("#v-today");
+  if(!S.LG){ box.innerHTML = `<p class="note">불러오는 중이에요…</p>`; return; }
+  if(S.tdReady!==kday() || !TD || TD.date!==kday()){ box.innerHTML = `<p class="lead">오늘의 배댓</p><p class="note">오늘 묶음을 고르는 중이에요…</p>`; ensureToday(); return; }
+  while(TD.i < TD.ids.length){ const x = tItem(TD.i); if(x && !LGU.block[chOf(x.v)]) break; TD.i++; saveTD(); }
+  const n = TD.ids.length, d = new Date(Date.now() + 9*3600e3);
+  const head = `<div class="thead"><p class="lead">오늘의 배댓 <span class="note">${d.getUTCMonth()+1}월 ${d.getUTCDate()}일</span></p><button type="button" class="chip" data-cardgo="${esc((S.LG.raws||[])[0]?.month||"")}">월별 카드</button></div>
+    <div class="rprog"><span style="width:${n?Math.round(TD.i/n*1000)/10:0}%"></span></div>`;
+  if(TD.i >= n){
+    const best = TD.ids.reduce((s, [vid, m]) => s + ((S.RW[m]?.comments)||[]).filter(c => c[0]===vid && LGU.rate[c[1]]===3).length, 0);
+    box.innerHTML = head + `<div class="card tend"><p class="lead">오늘 분량 끝</p><p>영상 ${n}개를 봤어요 · 🤣 최고 ${best}개</p>
+      <div class="btnrow"><button class="btn" type="button" data-tmore>30개 더 보기</button><button class="btn ghost" type="button" data-tagain>처음부터 다시</button></div>
+      <p class="note">내일 새벽에 로봇이 새 영상을 채워요. 본 영상은 다시 안 나오고, 🤣를 많이 누를수록 내 취향에 맞는 창고 영상이 먼저 나와요.</p></div>`;
+    return;
+  }
+  box.innerHTML = head + todayCard(tItem(TD.i), TD.i, n);
+}
 const modeSeg = () => `<div class="seg2" role="group" aria-label="영상 보기 방식"><button type="button" data-vmode="legend" aria-pressed="${S.vmode==="legend"}">명댓글 감상</button><button type="button" data-vmode="month" aria-pressed="${S.vmode==="month"}">월간 인기 영상</button></div>`;
 
 // ───────── 수집 대기 ─────────
@@ -740,7 +869,6 @@ function viewMonth(){
   const types = count(cs.filter(c=>c.tags?.type), c=>c.tags.type), emos = count(cs.filter(c=>c.tags?.emotion), c=>c.tags.emotion);
   const tot = types.reduce((s,x)=>s+x[1],0)||1;
   const avg = cs.length ? Math.round(cs.reduce((s,c)=>s+c.likes,0)/cs.length) : 0;
-  const powerTop = cs.filter(c=>c.power!=null).sort((a,b)=>b.power-a.power)[0];
   const line = types.length ? `${monthKo(e.month)} 배댓은 <b>${esc(josa(types[0][0],"이","가"))}</b> ${Math.round(types[0][1]/tot*100)}%로 가장 많았어요.${emos[0]?` 감정은 <b>${esc(josa(emos[0][0],"이","가"))}</b> 앞섰고요.`:""}` : "분류가 아직 안 끝난 월간판이에요.";
   const rawE = (S.LG?.raws||[]).find(r => r.month===e.month);
   box.innerHTML = `${rawE?`<button type="button" class="cardgo" data-cardgo="${esc(e.month)}"><span class="cg-ic" aria-hidden="true">🃏</span><span class="cg-t"><b>${monthKo(e.month)} 댓글 카드로 넘기기</b><span>${kNum(rawE.comments)}개 · 한 장씩 보고 🤣🙂😐</span></span><span aria-hidden="true">›</span></button>`:""}${S.LG?`<button type="button" class="banner" data-v="videos" style="border:0;text-align:left;width:100%;background:var(--tint-soft)"><b style="color:var(--tint-t)">명댓글 감상</b>장면을 보고 기막힌 한 줄을 만나 보세요 · ${S.LG.moments.length}편 ›</button>`:""}${monthChips()}
@@ -752,7 +880,6 @@ function viewMonth(){
       <div class="tile"><b>${types[0]?esc(types[0][0]):"—"}</b><span>최다 유형</span></div>
       <div class="tile"><b>${kNum(avg)}</b><span>배댓 평균 좋아요</span></div>
     </div>
-    ${powerTop?`<h2 class="sec">배댓 파워 1위<span class="n">영상보다 댓글이 터진 곳</span></h2>${cmtCard(powerTop)}`:""}
     <h2 class="sec">좋아요 Top 10</h2>
     <div class="stack">${top.map(cmtCard).join("")}</div>
     <button class="btn ghost" type="button" data-v="videos">영상 ${vids(e).length}개 카드로 보기</button>
@@ -766,13 +893,11 @@ function viewVideos(){
   if(!e){ box.innerHTML = modeSeg() + waiting(); return; }
   const cats = count(vids(e), v=>v.category).map(x=>x[0]);
   let list = vids(e).filter(v => S.vf==="all" ? true : S.vf==="long" ? !v.short : S.vf==="short" ? v.short : v.category===S.vf);
-  const pmax = v => Math.max(0, ...v.best.map(c=>c.power||0));
-  if(S.vsort==="power") list = list.slice().sort((a,b)=>pmax(b)-pmax(a));
-  else if(S.vsort==="likes") list = list.slice().sort((a,b)=>Math.max(...b.best.map(c=>c.likes))-Math.max(...a.best.map(c=>c.likes)));
+  if(S.vsort==="likes") list = list.slice().sort((a,b)=>Math.max(...b.best.map(c=>c.likes))-Math.max(...a.best.map(c=>c.likes)));
   box.innerHTML = `${modeSeg()}${monthChips()}
     <p class="lead">${monthKo(e.month)} 인기 영상</p>
     <div class="chips" role="group" aria-label="영상 거르기">${[["all",`전체 ${vids(e).length}`],["long","쇼츠 빼기"],["short","쇼츠만"],...cats.map(c=>[c,c])].map(([k,n]) => `<button class="chip" type="button" data-vf="${esc(k)}" aria-pressed="${S.vf===k}">${esc(n)}</button>`).join("")}</div>
-    <div class="chips" role="group" aria-label="정렬">${[["rank","조회수 순위"],["likes","배댓 좋아요 순"],["power","배댓 파워 순"]].map(([k,n]) => `<button class="chip" type="button" data-vsort="${k}" aria-pressed="${S.vsort===k}">${n}</button>`).join("")}</div>
+    <div class="chips" role="group" aria-label="정렬">${[["rank","조회수 순위"],["likes","배댓 좋아요 순"]].map(([k,n]) => `<button class="chip" type="button" data-vsort="${k}" aria-pressed="${S.vsort===k}">${n}</button>`).join("")}</div>
     <p class="note">${list.length}개 영상 · 카드마다 배댓 10개 · 썸네일을 누르면 여기서 바로 재생돼요</p>
     <div class="stack vlist" style="gap:16px">${list.map(vCard).join("") || `<p class="note">해당하는 영상이 없어요.</p>`}</div>
     ${e.skipped?`<p class="note">건너뛴 영상: 한국 채널 아님 ${e.skipped.not_kr||0} · 댓글 꺼짐 ${e.skipped.comments_off||0} · 댓글 없음 ${e.skipped.no_comments||0}</p>`:""}`;
@@ -785,12 +910,12 @@ function viewBest(){
   let cs = allComments(e);
   const counts = Object.fromEntries(count(cs, c=>c.tags?.type));
   if(S.cf!=="all") cs = cs.filter(c => S.cf==="ts" ? c.ts : c.tags?.type===S.cf);
-  const key = {likes:c=>c.likes, power:c=>c.power??-1, replies:c=>c.replies, len:c=>-c.len}[S.sort];
+  const key = {likes:c=>c.likes, replies:c=>c.replies, len:c=>-c.len}[S.sort];
   cs.sort((a,b)=>key(b)-key(a));
   box.innerHTML = `${monthChips()}
     <p class="lead">${monthKo(e.month)} 배댓 ${allComments(e).length}개</p>
     <div class="chips" role="group" aria-label="유형">${[["all","전체"],...TYPES.filter(t=>counts[t]).map(t=>[t,`${t} ${counts[t]}`]),["ts","타임스탬프 있음"]].map(([k,n]) => `<button class="chip" type="button" data-cf="${esc(k)}" aria-pressed="${S.cf===k}">${esc(n)}</button>`).join("")}</div>
-    <div class="chips" role="group" aria-label="정렬">${[["likes","좋아요순"],["power","배댓 파워순"],["replies","답글순"],["len","짧은 순"]].map(([k,n]) => `<button class="chip" type="button" data-sort="${k}" aria-pressed="${S.sort===k}">${n}</button>`).join("")}</div>
+    <div class="chips" role="group" aria-label="정렬">${[["likes","좋아요순"],["replies","답글순"],["len","짧은 순"]].map(([k,n]) => `<button class="chip" type="button" data-sort="${k}" aria-pressed="${S.sort===k}">${n}</button>`).join("")}</div>
     <div class="stack">${cs.slice(0,100).map(cmtCard).join("") || `<p class="note">해당하는 배댓이 없어요.</p>`}</div>
     ${cs.length>100?`<p class="note">상위 100개만 보여요. 전부 보려면 '영상' 탭이나 '내 기록'의 CSV를 쓰세요.</p>`:""}`;
 }
@@ -807,7 +932,6 @@ function viewStats(){
   const tagged = cs.filter(c=>c.tags?.type);
   const types = count(tagged, c=>c.tags.type), emos = count(tagged, c=>c.tags.emotion), devs = count(tagged.filter(c=>c.tags.type==="드립"), c=>c.tags.device);
   const catRows = count(vids(e), v=>v.category).map(([cat]) => { const cc = tagged.filter(c=>c.v.category===cat); return {cat, n:cc.length, t:count(cc, c=>c.tags.type)}; }).filter(r=>r.n);
-  const pw = cs.filter(c=>c.power!=null).sort((a,b)=>b.power-a.power).slice(0,5);
   const kws = e.summary?.keywords || [];
   const multi = S.months.filter(m=>S.eds[m] && !S.eds[m].auto);
   const cmp = multi.length>1 ? `<h2 class="sec">월별 유형 변화</h2>
@@ -815,6 +939,7 @@ function viewStats(){
       return `<div class="stack" style="gap:4px"><span class="note">${monthKo(m)}판</span><div class="stackbar">${t.map(([k,v])=>`<i title="${esc(k)} ${Math.round(v/tot*100)}%" style="width:${v/tot*100}%;background:${TCOL[k]}"></i>`).join("")}</div></div>`; }).join("")}
     <div class="legend">${TYPES.map(t=>`<span><span class="tdot" style="background:${TCOL[t]}"></span>${t}</span>`).join("")}</div></div>` : "";
   box.innerHTML = `${monthChips()}
+    <button type="button" class="banner" data-v="month" style="border:0;text-align:left;width:100%;background:var(--tint-soft)"><b style="color:var(--tint-t)">${monthKo(e.month)}판 요약</b>좋아요 Top 10 · 유형 한눈에 ›</button>
     <p class="lead">${monthKo(e.month)}판 분석</p>
     <div class="tiles"><div class="tile"><b>${n?Math.round(cs.filter(c=>c.ts).length/n*100):0}%</b><span>타임스탬프 배댓</span></div><div class="tile"><b>${n?Math.round(cs.reduce((s,c)=>s+c.len,0)/n):0}</b><span>평균 글자 수</span></div><div class="tile"><b>${vids(e).filter(v=>v.short).length}</b><span>쇼츠 영상</span></div><div class="tile"><b>${kNum(Math.round(cs.reduce((s,c)=>s+c.replies,0)/Math.max(1,n)))}</b><span>배댓 평균 답글</span></div></div>
     ${e.report?`<h2 class="sec">월간 리포트</h2><div class="card"><p style="white-space:pre-wrap;line-height:1.7">${esc(e.report)}</p></div>`:""}
@@ -823,10 +948,7 @@ function viewStats(){
     ${emos.length?`<h2 class="sec">배댓의 온도</h2><div class="card">${bars(emos, tagged.length, ()=>"var(--orange)")}</div>`:""}
     ${cmp}
     ${catRows.length?`<h2 class="sec">분야마다 반응하는 방식</h2><div class="tbl"><table><thead><tr><th>카테고리</th><th>배댓</th><th>1위 유형</th><th>2위 유형</th></tr></thead><tbody>${catRows.map(r=>`<tr><td>${esc(r.cat)}</td><td class="num">${r.n}</td><td>${r.t[0]?esc(r.t[0][0])+" "+Math.round(r.t[0][1]/r.n*100)+"%":"—"}</td><td>${r.t[1]?esc(r.t[1][0])+" "+Math.round(r.t[1][1]/r.n*100)+"%":"—"}</td></tr>`).join("")}</tbody></table></div>`:""}
-    ${kws.length?`<h2 class="sec">자주 나온 말</h2><div class="kws">${kws.slice(0,24).map(([k,v])=>`<span class="pill">${esc(k)} ${v}</span>`).join("")}</div>`:""}
-    <h2 class="sec">배댓 파워 Top 5</h2>
-    <p class="note">배댓 파워 = 댓글 좋아요 ÷ 영상 좋아요. 영상 크기와 상관없이 댓글이 얼마나 터졌는지 봐요.</p>
-    <div class="stack">${pw.map(cmtCard).join("")}</div>`;
+    ${kws.length?`<h2 class="sec">자주 나온 말</h2><div class="kws">${kws.slice(0,24).map(([k,v])=>`<span class="pill">${esc(k)} ${v}</span>`).join("")}</div>`:""}`;
 }
 
 // ───────── 내 기록 ─────────
@@ -838,6 +960,7 @@ function viewMine(){
     ${loginCard()}
     <p class="lead">저장한 배댓</p>
     <div class="stack">${items.length ? items.map(([cid, it]) => { const c = lookup(cid); if(!c) return ""; return `${cmtCard(c)}<label class="note" for="m-${esc(cid)}">메모</label><textarea id="m-${esc(cid)}" data-memo="${esc(cid)}" placeholder="왜 저장했나: 어디서 웃었는지, 어떤 장치인지">${esc(it.memo||"")}</textarea>`; }).join("") : `<p class="note">${e?"배댓의 '저장'을 누르면 여기에 모여요.":"월간판이 들어오면 배댓을 저장할 수 있어요."}</p>`}</div>
+    ${Object.keys(LGU.block).length ? `<h2 class="sec">그만 보기한 채널</h2><div class="card"><div class="chips">${Object.entries(LGU.block).map(([k,n]) => `<button class="chip" type="button" data-tunblock="${esc(k)}">${esc(n===1?k:n)} ✕</button>`).join("")}</div><p class="note">누르면 다시 '오늘'에 나와요.</p></div>` : ""}
     <h2 class="sec">시트로 내보내기</h2>
     <div class="card">
       <div class="btnrow"><button class="btn" type="button" data-dl="comments" ${e?"":"disabled"}>배댓표 CSV</button><button class="btn ghost" type="button" data-dl="videos" ${e?"":"disabled"}>영상표 CSV</button><button class="btn ghost" type="button" data-dl="saved" ${e?"":"disabled"}>저장표 CSV</button></div>
@@ -887,7 +1010,7 @@ function rows(kind){
   const e = ed(); if(!e) return [];
   if(kind==="videos") return [["월","순위","영상ID","제목","채널","카테고리","업로드","길이(초)","쇼츠","조회수","좋아요","댓글수","구독자","설명","링크"], ...vids(e).map(v=>[e.month,v.rank,v.id,v.title,v.channel,v.category,v.publishedAt,v.dur,v.short?"Y":"N",v.views,v.likes,v.comments,v.subs,v.desc||"",watch(v.id)])];
   if(kind==="saved") return [["월","댓글ID","영상ID","본문","메모","저장시각","링크"], ...Object.entries(savedOf()).map(([cid,it]) => { const c = allComments().find(x=>x.id===cid); return [e.month,cid,it.vid,c?.text||"",it.memo||"",it.at,c?at(c.v.id,cid):""]; })];
-  return [["월","영상순위","영상ID","영상제목","카테고리","배댓순위","댓글ID","본문","좋아요","답글","배댓파워","글자수","타임스탬프","이모지","유형","드립장치","감정","키워드","작성일","댓글링크"], ...allComments().map(c=>[e.month,c.v.rank,c.v.id,c.v.title,c.v.category,c.rank,c.id,c.text,c.likes,c.replies,c.power,c.len,c.ts?"Y":"N",c.emoji,c.tags?.type||"",c.tags?.device||"",c.tags?.emotion||"",(c.tags?.kw||[]).join(" "),c.at,at(c.v.id,c.id)])];
+  return [["월","영상순위","영상ID","영상제목","카테고리","배댓순위","댓글ID","본문","좋아요","답글","글자수","타임스탬프","이모지","유형","드립장치","감정","키워드","작성일","댓글링크"], ...allComments().map(c=>[e.month,c.v.rank,c.v.id,c.v.title,c.v.category,c.rank,c.id,c.text,c.likes,c.replies,c.len,c.ts?"Y":"N",c.emoji,c.tags?.type||"",c.tags?.device||"",c.tags?.emotion||"",(c.tags?.kw||[]).join(" "),c.at,at(c.v.id,c.id)])];
 }
 async function download(kind){
   if(!DL){ const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([toCSV(rows(kind))], {type:"text/csv"})); a.download = `배댓_${S.month}_${{comments:"배댓표",videos:"영상표",saved:"저장표"}[kind]}.csv`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); return; }
@@ -900,11 +1023,11 @@ async function copyCmt(){
 }
 
 // ───────── 이동 ─────────
-const VIEWS = ["month","videos","best","stats","mine"];
-const DRAW = {month:viewMonth, videos:viewVideos, best:viewBest, stats:viewStats, mine:viewMine};
+const VIEWS = ["today","month","videos","best","stats","mine"];
+const DRAW = {today:viewToday, month:viewMonth, videos:viewVideos, best:viewBest, stats:viewStats, mine:viewMine};
 function draw(){ DRAW[S.view](); hydrate($("#v-"+S.view)); }
 function show(v, keepScroll){
-  if(!VIEWS.includes(v)) v = "month";
+  if(!VIEWS.includes(v)) v = "today";
   S.view = v; VIEWS.forEach(x => { $("#v-"+x).hidden = x!==v; });
   document.querySelectorAll("nav.tabs button").forEach(b => b.dataset.v===v ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"));
   draw(); if(!keepScroll) window.scrollTo(0,0);
@@ -919,6 +1042,12 @@ window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 document.addEventListener("click", e => {
   const t = e.target;
   const tab = t.closest("[data-v]"); if(tab){ go(tab.dataset.v); return; }
+  if(t.closest("[data-tnext]")){ todayStep(1); return; }
+  if(t.closest("[data-tprev]")){ todayStep(-1); return; }
+  const tb = t.closest("[data-tblock]"); if(tb){ LGU.block[tb.dataset.tblock] = tb.dataset.name || 1; saveLGU(); toast("이 채널은 이제 안 나와요 · '내 기록'에서 되돌릴 수 있어요"); todayStep(1); return; }
+  const tub = t.closest("[data-tunblock]"); if(tub){ delete LGU.block[tub.dataset.tunblock]; saveLGU(); draw(); return; }
+  if(t.closest("[data-tmore]")){ todayMore(); return; }
+  if(t.closest("[data-tagain]")){ TD.i = 0; saveTD(); playing = null; draw(); window.scrollTo(0,0); return; }
   const hd = t.closest("[data-hide]"); if(hd){ const c = hd.dataset.hide; HIDE.has(c) ? HIDE.delete(c) : HIDE.add(c); saveHide(); if(S.vf===c) S.vf="all"; chip(); draw(); return; }
   if(t.closest("[data-hideopen]")){ S.hideOpen = !S.hideOpen; draw(); return; }
   if(t.closest("[data-hideclear]")){ HIDE.clear(); saveHide(); chip(); draw(); return; }
@@ -977,7 +1106,7 @@ function chip(){
   $("#edchip").innerHTML = e ? `<b>${monthKo(e.month)}판</b>영상 ${vids(e).length} · 배댓 ${allComments(e).length}` : `<b>수집 대기</b>월간판 0개`;
 }
 async function boot(){
-  fetch(BASE + "legend.json", {cache:"no-store"}).then(r => r.ok ? r.json() : null).then(j => { if(j){ S.LG = j; if(S.view==="videos" && S.vmode==="legend") draw(); } }).catch(()=>{});
+  fetch(BASE + "legend.json", {cache:"no-store"}).then(r => r.ok ? r.json() : null).then(j => { if(j){ S.LG = j; if((S.view==="videos" && S.vmode==="legend") || S.view==="today") draw(); } }).catch(()=>{});
   try{
     const r = await fetch(BASE + "index.json", {cache:"no-store"});
     const idx = r.ok ? await r.json() : {months:[]};
@@ -1004,7 +1133,7 @@ async function boot(){
     }, () => { clearTimeout(timer); S.mode="preview"; if(S.view==="mine") draw(); });
   }catch(_){ clearTimeout(timer); S.mode="preview"; }
 }
-window.vfmApp = { back(){ if(closePlayer()) return true; if(stopPlay()) return true; if(S.view!=="month"){ go("month"); return true; } return false; }, go: h => go(String(h||"").replace(/^#/,"")), route: () => draw(), top: () => go("month") };
+window.vfmApp = { back(){ if(closePlayer()) return true; if(stopPlay()) return true; if(S.view!=="today"){ go("today"); return true; } return false; }, go: h => go(String(h||"").replace(/^#/,"")), route: () => draw(), top: () => go("today") };
 show(location.hash.slice(1));
 boot();
 })();
