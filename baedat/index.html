@@ -352,6 +352,10 @@ button.pill{border:0;cursor:pointer}
 .tc:first-child>p:first-child{font-size:21px}
 .tc .trep{margin:5px 0 0;font-size:13.5px;line-height:1.45;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tcard .ttl{font-size:14px;font-weight:600;color:var(--muted)}
+.tcard.talk .tc>p:first-child,.tcard.talk .tc:first-child>p:first-child{font-family:inherit;font-size:16.5px;font-weight:600;line-height:1.62;letter-spacing:0}
+.tcard.talk .tc:first-child>p:first-child{font-size:17.5px}
+.tcard.talk .trep{-webkit-line-clamp:3;border-left:2px solid var(--line);padding-left:10px;margin-left:2px}
+#v-today .seg2{margin:10px 0 8px}
 .tcm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
 .tcm .pill{border:0;cursor:pointer;font:inherit;font-size:12px;font-weight:600}
 .trate{margin-left:auto;display:flex;gap:4px}
@@ -639,7 +643,7 @@ function viewEdition(box, m){
 const RWP = {};
 function loadRawP(m){
   if(S.RW[m] && S.RW[m].comments) return Promise.resolve(S.RW[m]);
-  const e = (S.LG?.raws||[]).find(x => x.month===m); if(!e) return Promise.resolve(null);
+  const t = String(m).startsWith("t:"), e = ((t ? S.LG?.talks : S.LG?.raws)||[]).find(x => x.month===(t ? m.slice(2) : m)); if(!e) return Promise.resolve(null);
   return RWP[m] = RWP[m] || fetch(BASE + e.file, {cache:"no-store"}).then(r => r.ok ? r.json() : null).then(j => { if(j) S.RW[m] = j; else delete RWP[m]; return j; }).catch(() => { delete RWP[m]; return null; });
 }
 function loadRaw(m){
@@ -764,16 +768,23 @@ function rawCardRate(id, n){
 const TODAY_N = 30, TKEY = "vfm:baedat:today";
 const kday = () => new Date(Date.now() + 9*3600e3).toISOString().slice(0,10);
 const dayNo = () => Math.floor((Date.now() + 9*3600e3) / 864e5);
-let TD = null; try{ TD = JSON.parse(localStorage.getItem(TKEY) || "null"); }catch(_){}
-function saveTD(){ try{ localStorage.setItem(TKEY, JSON.stringify(TD)); }catch(_){} }
+// 두 가지 묶음: fun = 웃긴 배댓, talk = 댓글 맛집(경험담·정보·해석이 오가는 댓글창)
+let TMODE = "fun"; try{ TMODE = localStorage.getItem(TKEY + ":mode") === "talk" ? "talk" : "fun"; }catch(_){}
+const tkey = () => TMODE==="talk" ? TKEY + ":talk" : TKEY;
+let TD = null;
+function loadTD(){ TD = null; try{ TD = JSON.parse(localStorage.getItem(tkey()) || "null"); }catch(_){} }
+loadTD();
+function saveTD(){ try{ localStorage.setItem(tkey(), JSON.stringify(TD)); }catch(_){} }
+function setTMode(m){ TMODE = m; try{ localStorage.setItem(TKEY + ":mode", m); }catch(_){} loadTD(); playing = null; S.tdReady = null; draw(); }
 const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 const shuf = (a, r) => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const chOf = v => v[7] || v[1];
 async function buildToday(round){
-  const raws = S.LG.raws || [], r = rng(dayNo() * 31 + round);
-  const live = raws.filter(x => x.live).map(x => x.month);
-  const older = shuf(raws.map(x => x.month).filter(m => !live.includes(m)), r).slice(0, 4 + round * 2);
-  const Rs = (await Promise.all([...new Set([...live, ...older])].map(loadRawP))).filter(Boolean);
+  const pre = TMODE==="talk" ? "t:" : "", raws = (TMODE==="talk" ? S.LG.talks : S.LG.raws) || [], r = rng(dayNo() * 31 + round + (pre ? 7 : 0));
+  const live = raws.filter(x => x.live).map(x => pre + x.month);
+  const older = shuf(raws.map(x => pre + x.month).filter(m => !live.includes(m)), r).slice(0, (pre ? 8 : 4) + round * 2);
+  const ks = [...new Set([...live, ...older])];
+  const Rs = (await Promise.all(ks.map(loadRawP))).map((R, i) => R && Object.assign(Object.create(R), {month:ks[i]})).filter(Boolean);
   const have = new Set((TD && TD.date===kday() ? TD.ids : []).map(x => x[0]));
   const items = [];
   Rs.forEach(R => { const by = {}; R.comments.forEach(c => (by[c[0]] = by[c[0]] || []).push(c));
@@ -805,7 +816,7 @@ async function ensureToday(){
     if(!TD || TD.date!==kday()){ TD = {date:kday(), ids:await buildToday(0), i:0, round:0}; saveTD(); }
     await Promise.all([...new Set(TD.ids.map(x => x[1]))].map(loadRawP));
   } finally { tdBusy = false; }
-  S.tdReady = kday(); if(S.view==="today") draw();
+  S.tdReady = kday() + TMODE; if(S.view==="today") draw();
 }
 async function todayMore(){
   const box = $("#v-today"); box.insertAdjacentHTML("beforeend", `<p class="note">창고에서 더 고르는 중이에요…</p>`);
@@ -828,7 +839,7 @@ function todayCard(x, i, n){
     <div class="tcm"><span class="note">좋아요 ${kNum(c[3])}${c[4]?` · 답글 ${kNum(c[4])}`:""}</span>${st?`<button type="button" class="pill acc" data-lplay="${esc(vid)}" data-start="${st}">▶ ${ts(st)} 장면</button>`:""}
     <span class="trate" role="group" aria-label="호감도">${[[3,"🤣","최고"],[2,"🙂","괜찮"],[1,"😐","별로"]].map(([k,e,l]) => `<button type="button" data-rate="${esc(c[1])}" data-n="${k}" aria-pressed="${LGU.rate[c[1]]===k}" aria-label="${l}">${e}</button>`).join("")}</span></div></li>`; };
   const fresh = (Date.now() - Date.parse(v[2])) / 864e5 <= 7;
-  return `<article class="rcard tcard${vert?" vert":""}" data-tcard="${esc(vid)}">
+  return `<article class="rcard tcard${vert?" vert":""}${TMODE==="talk"?" talk":""}" data-tcard="${esc(vid)}">
     <div class="media${playing===vid?" pl":""}${vert?" v":""}"${vert?` style="--bgimg:url('https://i.ytimg.com/vi/${encodeURIComponent(vid)}/hqdefault.jpg')"`:""}>${media}</div>
     <div class="rcb">
       <div class="rwv">${fresh?`<span class="vbadge">새 영상</span> `:""}${esc(v[1])} · ${esc(v[4]||"")} · ${esc(String(v[2]||"").slice(5).replace("-","."))} · 조회 ${kNum(v[3])}</div>
@@ -844,14 +855,15 @@ function todayCard(x, i, n){
 function viewToday(){
   const box = $("#v-today");
   if(!S.LG){ box.innerHTML = `<p class="note">불러오는 중이에요…</p>`; return; }
-  if(S.tdReady!==kday() || !TD || TD.date!==kday()){ box.innerHTML = `<p class="lead">오늘의 배댓</p><p class="note">오늘 묶음을 고르는 중이에요…</p>`; ensureToday(); return; }
+  const seg = `<div class="seg2" role="group" aria-label="묶음"><button type="button" data-tmode="fun" aria-pressed="${TMODE==="fun"}">🤣 웃긴 배댓</button><button type="button" data-tmode="talk" aria-pressed="${TMODE==="talk"}">💬 댓글 맛집</button></div>`;
+  if(S.tdReady!==kday() + TMODE || !TD || TD.date!==kday()){ box.innerHTML = `<p class="lead">오늘의 배댓</p>${seg}<p class="note">오늘 묶음을 고르는 중이에요…</p>`; ensureToday(); return; }
   while(TD.i < TD.ids.length){ const x = tItem(TD.i); if(x && !LGU.block[chOf(x.v)]) break; TD.i++; saveTD(); }
   const n = TD.ids.length, d = new Date(Date.now() + 9*3600e3);
   const head = `<div class="thead"><p class="lead">오늘의 배댓 <span class="note">${d.getUTCMonth()+1}월 ${d.getUTCDate()}일</span></p><button type="button" class="chip" data-cardgo="${esc((S.LG.raws||[])[0]?.month||"")}">월별 카드</button></div>
-    <div class="rprog"><span style="width:${n?Math.round(TD.i/n*1000)/10:0}%"></span></div>`;
+    ${seg}<div class="rprog"><span style="width:${n?Math.round(TD.i/n*1000)/10:0}%"></span></div>${TMODE==="talk" && TD.i===0 ? `<p class="note">경험담·지역 이야기·알고 보니 정보처럼, 댓글끼리 이야기가 오가는 영상이에요.</p>` : ""}`;
   if(TD.i >= n){
     const best = TD.ids.reduce((s, [vid, m]) => s + ((S.RW[m]?.comments)||[]).filter(c => c[0]===vid && LGU.rate[c[1]]===3).length, 0);
-    box.innerHTML = head + `<div class="card tend"><p class="lead">오늘 분량 끝</p><p>영상 ${n}개를 봤어요 · 🤣 최고 ${best}개</p>
+    box.innerHTML = head + `<div class="card tend"><p class="lead">오늘 분량 끝</p><p>${TMODE==="talk" ? "댓글 맛집" : "영상"} ${n}개를 봤어요 · 🤣 최고 ${best}개</p>
       <div class="btnrow"><button class="btn" type="button" data-tmore>30개 더 보기</button><button class="btn ghost" type="button" data-tagain>처음부터 다시</button></div>
       <p class="note">내일 새벽에 로봇이 새 영상을 채워요. 본 영상은 다시 안 나오고, 🤣를 많이 누를수록 내 취향에 맞는 창고 영상이 먼저 나와요.</p></div>`;
     return;
@@ -1080,6 +1092,7 @@ document.addEventListener("click", e => {
   const t = e.target;
   const tab = t.closest("[data-v]"); if(tab){ go(tab.dataset.v); return; }
   if(t.closest("[data-tnext]")){ todayStep(1); return; }
+  const tm = t.closest("[data-tmode]"); if(tm){ if(tm.dataset.tmode!==TMODE) setTMode(tm.dataset.tmode); return; }
   if(t.closest("[data-mnext]")){ monthStep(1); return; }
   if(t.closest("[data-mprev]")){ monthStep(-1); return; }
   if(t.closest("[data-mfirst]")){ S.vi = 0; draw(); return; }
