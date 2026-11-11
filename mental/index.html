@@ -174,6 +174,17 @@ details.les summary{align-items:center}
 details.les .body>*{margin-bottom:8px}
 details.les .say{margin:2px 0 !important;font-size:14.5px}
 details.les .say::before{content:"“";color:var(--muted)}details.les .say::after{content:"”";color:var(--muted)}
+.cmx{display:grid;gap:8px;margin:2px 0 10px}
+.cmx .pn{border:1.5px solid var(--ink,#222);border-radius:12px;padding:8px 9px 9px;background:var(--surface);display:grid;gap:6px}
+.cmx .cap{font-size:12px;font-weight:700;color:var(--muted);display:flex;gap:6px;align-items:center;min-height:18px}
+.cmx .cap b{flex:none;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center}
+.cmx .ln{display:flex;gap:8px;align-items:flex-end}
+.cmx .ln.you{flex-direction:row-reverse}
+.cmx .fc{flex:none;width:40px;height:40px}
+.cmx .bb{background:var(--sunk);border-radius:14px 14px 14px 4px;padding:7px 11px;font-size:14.5px;line-height:1.45;max-width:78%;overflow-wrap:anywhere}
+.cmx .you .bb{border-radius:14px 14px 4px 14px;background:var(--accent-soft)}
+.cmx .bb.th{background:none;border:1.5px dashed var(--line);color:var(--muted);font-size:13.5px}
+@media (min-width:700px){.cmx{grid-template-columns:repeat(3,1fr)}.cmx .bb{max-width:100%}}
 .chk{color:var(--ok);font-weight:700}
 #v-lens .seg{margin:8px 0}
 #toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:13px;z-index:40;max-width:90vw;text-align:center}
@@ -311,7 +322,7 @@ function viewToday(){
     <div class="drill"><div class="lbl">오늘 할 훈련</div>${esc(u.drill)}</div>
     <div class="risk"><div class="lbl">지킬 것</div>${esc(u.risk)}</div>
     ${logUi}
-    ${(() => { const ct = S.sc && courseToday(); return ct && ct.l ? `<h2 class="sec"><span class="n">${ct.no}/${ct.total}</span>오늘의 한 수 · ${esc(ct.l.m.name.split(" · ")[0])}</h2><article class="card"><h3>${esc(ct.l.n)}</h3><p>${esc(ct.l.what)}</p><button class="btn ghost" type="button" data-lesson="${esc(ct.l.k)}">수업 열기</button></article>` : ""; })()}
+    ${(() => { const ct = S.sc && courseToday(); return ct && ct.l ? `<h2 class="sec"><span class="n">${ct.no}/${ct.total}</span>오늘의 한 수 · ${esc(ct.l.m.name.split(" · ")[0])}</h2><article class="card"><h3>${esc(ct.l.n)}</h3>${comic(ct.l.cm)}<p>${esc(ct.l.what)}</p><button class="btn ghost" type="button" data-lesson="${esc(ct.l.k)}">수업 열기</button></article>` : ""; })()}
     <h2 class="sec"><span class="n">${esc(u.id)}</span>장면과 원리</h2>
     ${fullCard(u)}`;
 }
@@ -401,6 +412,23 @@ const GR = {A:"ok", B:"acc", C:"warn", X:"bad"};
 const allLessons = () => (S.sc?.masters||[]).flatMap(m => m.lessons.map(l => ({...l, m})));
 const lessonBy = k => allLessons().find(l => l.k===k);
 const wt = (img, cls) => img ? `<img class="${cls}" data-wt="${esc(img)}" alt="" loading="lazy">` : "";
+// 3컷 만화: 얼굴(표정 7가지)과 말풍선을 그 자리에서 그림 (사진·서버 필요 없음)
+function face(who, mood){
+  const me = who==="me", skin = me ? "#FFD9A8" : "#F6C9A0", hair = me ? "#3F51B5" : "#5D4037";
+  const eye = {n:`<circle cx="17" cy="23" r="2.2"/><circle cx="31" cy="23" r="2.2"/>`, s:`<path d="M14 24q3-4 6 0M28 24q3-4 6 0" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round"/>`,
+    o:`<circle cx="17" cy="23" r="3.4" fill="#fff" stroke="#222" stroke-width="1.6"/><circle cx="31" cy="23" r="3.4" fill="#fff" stroke="#222" stroke-width="1.6"/><circle cx="17" cy="23" r="1.3"/><circle cx="31" cy="23" r="1.3"/>`,
+    t:`<circle cx="18" cy="22" r="2.2"/><circle cx="32" cy="22" r="2.2"/><path d="M13 17l8-2M27 15l8 2" stroke="#222" stroke-width="1.8" stroke-linecap="round"/>`,
+    a:`<circle cx="17" cy="24" r="2.2"/><circle cx="31" cy="24" r="2.2"/><path d="M12 17l9 3M36 17l-9 3" stroke="#222" stroke-width="2.2" stroke-linecap="round"/>`,
+    d:`<circle cx="17" cy="24" r="2.2"/><circle cx="31" cy="24" r="2.2"/><path d="M12 20l8-3M36 20l-8-3" stroke="#222" stroke-width="1.8" stroke-linecap="round"/>`,
+    w:`<circle cx="17" cy="23" r="2.2"/><path d="M28 23h6" stroke="#222" stroke-width="2.2" stroke-linecap="round"/>`}[mood] || "";
+  const mouth = {n:`<path d="M19 33h10"/>`, s:`<path d="M17 31q7 7 14 0"/>`, o:`<ellipse cx="24" cy="34" rx="3" ry="4" fill="#7a3b2e" stroke="none"/>`, t:`<path d="M20 34q4-2 8 0"/>`, a:`<path d="M18 35q6-5 12 0"/>`, d:`<path d="M18 35q6-4 12 0"/>`, w:`<path d="M17 31q8 6 14-1"/>`}[mood] || "";
+  const top = me ? `<path d="M6 21C5 8 15 2 24 2s19 6 18 19c-3-6-8-9-11-9-4 3-12 4-18 3-3 1-5 3-7 6z" fill="${hair}"/>` : `<path d="M5 30C2 12 12 2 24 2s22 10 19 28c-1-9-4-14-8-16-6 2-16 2-22 0-4 2-7 7-8 16z" fill="${hair}"/>`;
+  return `<svg class="fc" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="25" r="19" fill="${skin}"/>${top}<g fill="#222">${eye}</g><g fill="none" stroke="#222" stroke-width="2" stroke-linecap="round">${mouth}</g></svg>`;
+}
+function comic(cm){
+  if(!cm || !cm.length) return "";
+  return `<div class="cmx" role="img" aria-label="수업 만화">${cm.map(([cap, who], i) => `<div class="pn"><div class="cap"><b>${i+1}</b>${esc(cap)}</div>${who.map(([w, mood, tx]) => `<div class="ln ${w}">${face(w, mood)}${tx ? `<span class="bb${/^\(.*\)$/.test(tx) ? " th" : ""}">${esc(tx)}</span>` : ""}</div>`).join("")}</div>`).join("")}</div>`;
+}
 function courseToday(){
   const seq = (S.sc?.course||[]).flatMap(([w, ks]) => ks.map(k => ({w, k})));
   const i = seq.findIndex(x => !SU.done[x.k]);
@@ -411,6 +439,7 @@ function lessonHtml(l, open){
   const rel = S.uses.filter(u => l.techs.includes(u.tech)).sort((a,b) => (statsOf(a.id).tries - statsOf(b.id).tries) || a.level-b.level || a.id.localeCompare(b.id)).slice(0,3);
   const tn = l.techs.map(k => (S.catalog.techs||[]).find(t => t.k===k)?.n).filter(Boolean);
   return `<details class="cpt les" id="les-${esc(l.k)}" ${open?"open":""}><summary><span>${done?`<span class="chk" aria-label="해 봄">✓</span> `:""}${esc(l.n)}</span><span class="pill ${GR[l.ev]}">${esc(g[0])}</span></summary><div class="body">
+    ${comic(l.cm)}
     ${wt(l.img, "limg")}
     <p>${esc(l.what)}</p>
     ${l.say.length?`<div class="box"><div class="lbl">이렇게 말해요</div>${l.say.map(x => `<p class="say">${esc(x)}</p>`).join("")}</div>`:""}
@@ -433,7 +462,7 @@ function viewMaster(m){
     <h2 class="sec"><span class="n">${m.lessons.length}개</span>수업</h2>
     ${m.lessons.map(l => lessonHtml(l, S.openLesson===l.k)).join("")}
     <p class="note">더 읽을 책 · 논문: ${m.books.map(esc).join(" · ")}</p>`;
-  if(S.openLesson){ const el = document.getElementById("les-"+S.openLesson); S.openLesson = null; if(el) setTimeout(() => el.scrollIntoView({block:"start"}), 30); }
+  if(S.scrollLesson){ const el = document.getElementById("les-"+S.scrollLesson); S.scrollLesson = null; if(el) setTimeout(() => el.scrollIntoView({block:"start"}), 30); }
 }
 const lensSeg = () => `<div class="seg" role="group" aria-label="보기"><button type="button" data-lensmode="school" aria-pressed="${S.lensMode==="school"}">대가에게 배우기</button><button type="button" data-lensmode="concept" aria-pressed="${S.lensMode!=="school"}">개념 사전</button></div>`;
 function viewSchool(){
@@ -447,12 +476,12 @@ function viewSchool(){
     <p class="lead">대가에게 배우기</p>${lensSeg()}
     <p class="note">에릭슨부터 FBI 협상가까지 ${S.sc.masters.length}명, 수업 ${all.length}개예요. 수업마다 '이렇게 말해요 · 오늘 해볼 것 · 근거'가 한 장에 있고, 근거가 약하거나 반박된 것도 숨기지 않고 표시했어요.</p>
     <div class="top"><span class="pill ${dn?"ok":""}">${dn} / ${all.length} 해 봄</span>${Object.entries(S.sc.grades).map(([k,g]) => `<span class="pill ${GR[k]}">${esc(g[0])} ${cnt(k)}</span>`).join("")}</div>
-    ${ct && ct.l ? `<article class="card acc"><div class="lbl">4주 코스 · ${esc(ct.w)} · ${ct.no}/${ct.total}</div><h3>${esc(ct.l.n)}</h3><p class="note">${esc(ct.l.m.name)}</p><div class="drill"><div class="lbl">오늘 해볼 것</div>${esc(ct.l.drill)}</div><button class="btn" type="button" data-lesson="${esc(ct.l.k)}">수업 열기</button></article>` : `<div class="card"><p class="note">4주 코스를 다 했어요. 아래에서 남은 수업을 골라 보세요.</p></div>`}
+    ${ct && ct.l ? `<article class="card acc"><div class="lbl">4주 코스 · ${esc(ct.w)} · ${ct.no}/${ct.total}</div><h3>${esc(ct.l.n)}</h3><p class="note">${esc(ct.l.m.name)}</p>${comic(ct.l.cm)}<div class="drill"><div class="lbl">오늘 해볼 것</div>${esc(ct.l.drill)}</div><button class="btn" type="button" data-lesson="${esc(ct.l.k)}">수업 열기</button></article>` : `<div class="card"><p class="note">4주 코스를 다 했어요. 아래에서 남은 수업을 골라 보세요.</p></div>`}
     <h2 class="sec"><span class="n">${S.sc.masters.length}명</span>대가</h2>
     <div class="stack">${S.sc.masters.map(masterCard).join("")}</div>
     <p class="note">사진은 사람 얼굴 대신 그 수업을 떠올리게 하는 물건으로 골랐어요(위키백과 공용 사진).</p>`;
 }
-function goLesson(k){ const l = lessonBy(k); if(!l) return; closeSheet(); S.lensMode = "school"; S.master = l.m.k; S.openLesson = k; if(S.view==="lens"){ viewLens(); window.scrollTo(0,0); } else go("lens"); }
+function goLesson(k){ const l = lessonBy(k); if(!l) return; closeSheet(); S.lensMode = "school"; S.master = l.m.k; S.openLesson = k; S.scrollLesson = k; if(S.view==="lens"){ viewLens(); window.scrollTo(0,0); } else go("lens"); }
 function schoolRows(){ return [["대가","수업","설명","예문","훈련","근거등급","근거","출처","관련 기술","해 본 날"], ...allLessons().map(l => [l.m.name, l.n, l.what, l.say.join(" / "), l.drill, (S.sc.grades[l.ev]||[""])[0], l.evn, l.src, l.techs.map(k => (S.catalog.techs||[]).find(t => t.k===k)?.n||k).join("/"), SU.done[l.k]||""])]; }
 
 function viewLens(){
@@ -548,6 +577,7 @@ function go(v){ try{ history.replaceState(null, "", "#"+v); }catch(_){} show(v);
 document.querySelector("nav.tabs").addEventListener("click", e => { const b = e.target.closest("[data-v]"); if(!b) return; go(b.dataset.v); });
 window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 document.addEventListener("keydown", e => { if(e.key==="Escape") closeSheet(); });
+document.addEventListener("toggle", e => { const d = e.target; if(!d.classList || !d.classList.contains("les")) return; const k = d.id.slice(4); if(d.open) S.openLesson = k; else if(S.openLesson===k) S.openLesson = null; }, true);
 
 document.addEventListener("click", e => {
   const t = e.target;
