@@ -185,6 +185,15 @@ details.les .say::before{content:"“";color:var(--muted)}details.les .say::afte
 .cmx .you .bb{border-radius:14px 14px 4px 14px;background:var(--accent-soft)}
 .cmx .bb.th{background:none;border:1.5px dashed var(--line);color:var(--muted);font-size:13.5px}
 @media (min-width:700px){.cmx{grid-template-columns:repeat(3,1fr)}.cmx .bb{max-width:100%}}
+.stp{list-style:none;margin:2px 0 10px;padding:0;display:grid;gap:6px}
+.stp li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;line-height:1.500}
+.stp .pc{flex:none;position:relative;width:38px;height:38px;border-radius:11px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.stp .pi{width:22px;height:22px}
+.stp .pc b{position:absolute;right:-4px;top:-4px;width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;display:grid;place-items:center}
+.xfig{margin:6px 0 10px}.xfig img{width:100%;max-height:260px;object-fit:contain;border-radius:10px;background:#fff;display:block}.xfig figcaption{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.400}
+.xmini{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0}.xmini small{color:var(--muted);font-size:12px}.xmini p{margin:4px 0 6px;font-size:14px;line-height:1.500}
+.xby{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.search{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;background:var(--surface);color:inherit;margin:8px 0}
 .ti{flex:none;width:22px;height:22px;color:var(--accent);margin-right:2px}
 .ti.big{width:38px;height:38px}
 .thead2{display:flex;gap:10px;align-items:center;margin:2px 0 6px}.thead2 b{display:block;font-size:14px}.thead2 small{display:block;font-size:12px;color:var(--muted);line-height:1.4}
@@ -294,12 +303,11 @@ function fullCard(u){
   const st = statsOf(u.id), an = S.analysis;
   const lensBox = k => { const a = an[u.id+"__"+k], c = a && (S.catalog.concepts||{})[a.c];
     if(!c) return `<div class="lens"><div class="lbl">${LENS[k]} · 예정</div>${esc(u.lens[k])}</div>`;
-    return `<div class="lens on">${wt(MART.concept(a.c), "limg")}<div class="lbl">${LENS[k]} · ${esc(c.n)}</div>${a.s?`<p class="scn"><b>이 장면에서는</b> ${esc(a.s)}</p>`:""}<p>${esc(c.b)}</p><div class="src">이 장면의 주제: ${esc(a.title)}</div><div class="src">근거: ${esc(c.src)}</div></div>`; };
+    return `<div class="lens on"><div class="lbl">${LENS[k]} · ${esc(c.n)}</div>${a.s?`<p class="scn"><b>이 장면에서는</b> ${esc(a.s)}</p>`:""}<p>${esc(c.b)}</p><div class="src">이 장면의 주제: ${esc(a.title)}</div><div class="src">근거: ${esc(c.src)}</div></div>`; };
   return `<article class="card acc">
     <div class="top"><span class="no">${esc(u.id)}</span>${u.cat.map(k=>`<span class="pill acc">${esc(catName(k))}</span>`).join("")}<span class="pill ${VER[u.verified][1]}">${VER[u.verified][0]}</span></div>
-    ${u.tech ? `<div class="thead2">${MART.icon(u.tech, "big")}<span><b>${esc(techOf(u.tech)?.n || "")}</b><small>${esc(techOf(u.tech)?.d || "")}</small></span></div>${wt(MART.tech(u.tech), "mbig")}` : ""}
+    ${u.tech ? `<div class="thead2">${MART.icon(u.tech, "big")}<span><b>${esc(techOf(u.tech)?.n || "")}</b><small>${esc(techOf(u.tech)?.d || "")}</small></span></div>` : ""}
     <h3>${esc(u.name)}</h3>
-    ${storyboard(u)}
     <div class="top"><span class="note">난이도</span><span class="lv" aria-label="난이도 ${u.level} / 3">${lvStars(u.level)}</span><span class="note">· 해본 횟수 ${st.tries} · 잘 된 횟수 ${st.ok}</span></div>
     <div><div class="lbl">장면</div><p>${esc(u.scene)}</p></div>
     <div class="box"><div class="lbl">단서</div>${esc(u.clue)}</div>
@@ -309,7 +317,7 @@ function fullCard(u){
     <div class="risk"><div class="lbl">위험 · 윤리</div>${esc(u.risk)}</div>
     ${(() => { const ls = allLessons().filter(l => l.techs[0]===u.tech || l.techs.includes(u.tech)).sort((a,b) => (a.techs[0]===u.tech?0:1) - (b.techs[0]===u.tech?0:1)).slice(0,4); return ls.length ? `<div><div class="lbl">대가에게 배우기</div><div class="chips">${ls.map(l => `<button class="chip" type="button" data-lesson="${esc(l.k)}">${esc(l.m.name.split(" · ")[0])} · ${esc(l.n)}</button>`).join("")}</div></div>` : ""; })()}
     <div class="lenses">${["psy","phi","sci"].map(lensBox).join("")}</div>
-    ${u.tech && MART.tech(u.tech) ? `<div data-gal="${esc(MART.tech(u.tech))}"></div>` : ""}
+    ${labFor(u)}
   </article>`;
 }
 function rowCard(u){
@@ -411,10 +419,10 @@ function viewMap(){
     <div class="card">${stairs(ST, TS, by, tried)}</div>
     ${ST.map((s, si) => { const ts = TS.filter(t => t.stage===s.k && (by[t.k]||[]).length); if(!ts.length) return "";
       const all = ts.flatMap(t => by[t.k]); const tr = tried(all);
-      return `<h2 class="sec"><span class="n">${si+1}단계</span>${esc(s.n)}</h2>${wt(MART.stage(s.k), "mbig")}<p class="note">${esc(s.d)} · ${all.length}장 중 ${tr}장 해 봄</p>
+      return `<h2 class="sec"><span class="n">${si+1}단계</span>${esc(s.n)}</h2><p class="note">${esc(s.d)} · ${all.length}장 중 ${tr}장 해 봄</p>
       ${ts.map(t => { const l = by[t.k]; no++; const tn = tried(l);
         return `<details class="cpt"><summary><span class="sti">${MART.icon(t.k)}${no}. ${esc(t.n)}</span><span class="n">${tn?`${tn}/`:""}${l.length}장 ›</span></summary><div class="body">
-          ${wt(MART.tech(t.k), "limg")}<p>${esc(t.d)}.</p>
+          <p>${esc(t.d)}.</p>
           ${bars([["난이도별 장면 수", "장", [["●○○", l.filter(u => u.level===1).length], ["●●○", l.filter(u => u.level===2).length], ["●●●", l.filter(u => u.level===3).length]]]])}<p class="note">${seasons(l)} · 평균 난이도 <span class="lv">${lvStars(avg(l))}</span> · 처음 나온 장면 ${esc(l.slice().sort((a,b)=>a.id.localeCompare(b.id))[0].id)}</p>
           <div class="drill"><div class="lbl">처음 해볼 훈련 · ${esc(l[0].name)}</div>${esc(l[0].drill)}</div>
           <div class="stack">${l.map(rowCard).join("")}</div></div></details>`; }).join("")}`; }).join("")}`;
@@ -478,6 +486,55 @@ function masterMap(m){
   const rows = Object.entries(cnt).sort((a,b) => b[1]-a[1]).slice(0,6).map(([k,v]) => [(S.catalog.techs||[]).find(t => t.k===k)?.n || k, v]);
   return rows.length ? bars([["이 대가의 수업이 닿는 기술", "개", rows]]) : "";
 }
+// ───────── 실험: 세계 연구·실험 결과 모음 (data/mental/lab.json) ─────────
+const LKEY = "vfm:mental:lab";
+let LU = {read:{}}; try{ LU = Object.assign(LU, JSON.parse(localStorage.getItem(LKEY) || "{}")); }catch(_){}
+function saveLU(){ try{ localStorage.setItem(LKEY, JSON.stringify(LU)); }catch(_){} }
+const labAll = () => S.lab?.items || [];
+const labBy = id => labAll().find(e => e.id===id);
+const commons = f => "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(f) + "?width=640";
+function steps(how){ return `<ol class="stp">${how.map(([i, t], n) => `<li><span class="pc">${MART.step(i)}<b>${n+1}</b></span><span>${esc(t)}</span></li>`).join("")}</ol>`; }
+function expBody(e){
+  const g = S.sc?.grades?.[e.ev] || ["",""];
+  const ls = e.ls.map(lessonBy).filter(Boolean), ts = e.tk.map(techOf).filter(Boolean);
+  return `<div class="lbl">어떻게 했나</div>${steps(e.how)}
+    ${e.bar ? bars([e.bar]) : ""}
+    ${e.fig ? `<figure class="xfig"><img src="${esc(commons(e.fig[0]))}" alt="" loading="lazy" onerror="this.parentNode.remove()"><figcaption>${esc(e.fig[1])} · 위키미디어 공용</figcaption></figure>` : ""}
+    <div class="box"><div class="lbl">알게 된 것</div>${esc(e.so)}</div>
+    <div class="lens on"><div class="lbl">${gauge(e.ev)} ${esc(g[0])}</div>${e.note ? `<p>${esc(e.note)}</p>` : `<p>${esc(g[1])}</p>`}<div class="src">${esc(e.by)}</div></div>
+    ${ts.length ? `<div class="tirow">${ts.map(t => `<span class="tib">${MART.icon(t.k)}<small>${esc(t.n.split(" · ")[0])}</small></span>`).join("")}</div>` : ""}
+    ${ls.length ? `<div class="chips">${ls.map(l => `<button class="chip" type="button" data-lesson="${esc(l.k)}">수업 · ${esc(l.n)}</button>`).join("")}</div>` : ""}`;
+}
+function expCard(e, open){
+  const g = S.sc?.grades?.[e.ev] || [""];
+  return `<details class="cpt les xp" id="xp-${esc(e.id)}" ${open?"open":""}><summary><span>${LU.read[e.id]?`<span class="chk">✓</span> `:""}${esc(e.t)}<small class="xby">${esc(e.by)}</small></span><span class="pill ${GR[e.ev]}">${esc(g[0])}</span></summary><div class="body">${open || S.openLab===e.id ? expBody(e) : ""}</div></details>`;
+}
+// 기술 카드 아래: 이 기술을 받치는 실험 세 개 (숫자 그림과 한 줄 결론)
+function labFor(u){
+  const xs = labAll().filter(e => e.tk.includes(u.tech)); if(!xs.length) return "";
+  const seed = [...u.id].reduce((n,c) => n*31 + c.charCodeAt(0) >>> 0, 7), pick = xs.map((e,i) => [e, (seed + i*2654435761) >>> 0]).sort((a,b) => (a[0].tk[0]===u.tech?0:1) - (b[0].tk[0]===u.tech?0:1) || a[1]-b[1]).slice(0,3).map(x => x[0]);
+  return `<div><div class="lbl">이 기술을 받치는 실험</div>${pick.map(e => `<div class="xmini"><b>${esc(e.t)}</b> <small>${esc(e.by)}</small>${e.bar ? bars([e.bar]) : ""}<p>${esc(e.so)}</p><button class="chip" type="button" data-lab="${esc(e.id)}">절차와 근거 보기 ›</button></div>`).join("")}</div>`;
+}
+function viewLab(){
+  const box = $("#v-lens"), all = labAll();
+  if(!S.lab){ box.innerHTML = `<p class="lead">실험</p>${lensSeg()}<p class="note">${S.lab===false ? "실험 자료를 불러오지 못했어요. 새로고침해 주세요." : "실험을 불러오는 중이에요…"}</p>`; return; }
+  const f = S.labF || "all", q = (S.labQ||"").trim().toLowerCase();
+  const TS = (S.catalog.techs||[]).filter(t => all.some(e => e.tk.includes(t.k)));
+  const list = all.filter(e => (f==="all" || f===e.ev || e.tk.includes(f)) && (!q || (e.t + " " + e.by + " " + e.so).toLowerCase().includes(q)));
+  const rd = all.filter(e => LU.read[e.id]).length, day = Math.floor(Date.now()/864e5), unread = all.filter(e => !LU.read[e.id]), td = (unread.length ? unread : all)[day % (unread.length || all.length)];
+  box.innerHTML = `
+    <p class="lead">실험으로 배우기</p>${lensSeg()}
+    <p class="note">세계 여러 연구실의 실험 ${all.length}개예요. 실험마다 절차 그림, 결과 숫자, 알게 된 것, 다시 해 봤을 때 결과가 같았는지를 적었어요. 유명하지만 뒤집힌 실험도 넣었어요.</p>
+    <div class="top"><span class="pill ${rd?"ok":""}">${rd} / ${all.length} 읽음</span></div>
+    ${td ? `<article class="card acc"><div class="lbl">오늘의 실험</div><h3>${esc(td.t)}</h3><p class="note">${esc(td.by)}</p>${expBody(td)}<button class="btn ${LU.read[td.id]?"ghost":"okb"}" type="button" data-labread="${esc(td.id)}">${LU.read[td.id]?"읽음 ✓":"읽었어요"}</button></article>` : ""}
+    <input class="search" id="labq" type="search" placeholder="실험 찾기 (예: 밀그램, 기억, 팁)" value="${esc(S.labQ||"")}">
+    <div class="chips" role="group" aria-label="거르기">${[["all","전체 "+all.length],["A","근거 튼튼"],["B","보통"],["X","뒤집힌 실험"]].map(([k,n]) => `<button class="chip" type="button" data-labf="${k}" aria-pressed="${f===k}">${n}</button>`).join("")}</div>
+    <div class="chips" role="group" aria-label="기술별">${TS.map(t => `<button class="chip" type="button" data-labf="${t.k}" aria-pressed="${f===t.k}">${esc(t.n.split(" · ")[0])} ${all.filter(e => e.tk.includes(t.k)).length}</button>`).join("")}</div>
+    <div id="labl">${list.map(e => expCard(e, S.openLab===e.id)).join("") || `<p class="note">찾는 실험이 없어요.</p>`}</div>`;
+  const i = $("#labq"); if(i) i.addEventListener("input", () => { S.labQ = i.value; const q2 = S.labQ.trim().toLowerCase(); $("#labl").innerHTML = all.filter(e => (f==="all" || f===e.ev || e.tk.includes(f)) && (!q2 || (e.t + " " + e.by + " " + e.so).toLowerCase().includes(q2))).map(e => expCard(e, false)).join("") || `<p class="note">찾는 실험이 없어요.</p>`; });
+  if(S.scrollLab){ const el = document.getElementById("xp-"+S.scrollLab); S.scrollLab = null; if(el) setTimeout(() => el.scrollIntoView({block:"start"}), 30); }
+}
+function goLab(id){ if(!labBy(id)) return; closeSheet(); S.lensMode = "lab"; S.master = null; S.labF = "all"; S.labQ = ""; S.openLab = id; S.scrollLab = id; if(S.view==="lens") viewLens(); else go("lens"); }
 function courseToday(){
   const seq = (S.sc?.course||[]).flatMap(([w, ks]) => ks.map(k => ({w, k})));
   const i = seq.findIndex(x => !SU.done[x.k]);
@@ -489,9 +546,9 @@ function lessonHtml(l, open){
   const tn = l.techs.map(k => (S.catalog.techs||[]).find(t => t.k===k)?.n).filter(Boolean);
   return `<details class="cpt les" id="les-${esc(l.k)}" ${open?"open":""}><summary><span>${done?`<span class="chk" aria-label="해 봄">✓</span> `:""}${esc(l.n)}</span><span class="pill ${GR[l.ev]}">${esc(g[0])}</span></summary><div class="body">
     ${comic(l.cm)}
-    ${wt(l.img, "limg")}
     <p>${esc(l.what)}</p>
     ${bars(l.bar)}
+    ${(() => { const xs = labAll().filter(e => e.ls.includes(l.k)).slice(0,4); return xs.length ? `<div class="lbl">이 수업의 실험</div>${xs.map(e => `<div class="xmini"><b>${esc(e.t)}</b> <small>${esc(e.by)}</small>${e.bar && !l.bar ? bars([e.bar]) : ""}<p>${esc(e.so)}</p><button class="chip" type="button" data-lab="${esc(e.id)}">절차와 근거 보기 ›</button></div>`).join("")}` : ""; })()}
     ${l.say.length?`<div class="box"><div class="lbl">이렇게 말해요</div>${l.say.map(x => `<p class="say">${esc(x)}</p>`).join("")}</div>`:""}
     <div class="drill"><div class="lbl">오늘 해볼 것</div>${esc(l.drill)}</div>
     <div class="lens on"><div class="lbl">${gauge(l.ev)} 근거 · ${esc(g[0])} <span class="note">(${esc(g[1])})</span></div><p>${esc(l.evn)}</p><div class="src">${esc(l.src)}</div></div>
@@ -501,12 +558,12 @@ function lessonHtml(l, open){
 }
 function masterCard(m){
   const d = m.lessons.filter(l => SU.done[l.k]).length;
-  return `<button class="mcard" type="button" data-master="${esc(m.k)}">${wt(m.img, "mimg")}<span class="mtx"><span class="t">${esc(m.name)}</span><span class="m">${esc(m.role)}</span><span class="o">${esc(m.one)}</span><span class="m">수업 ${m.lessons.length}개${d?` · ${d}개 해 봄`:""} ›</span></span></button>`;
+  return `<button class="mcard" type="button" data-master="${esc(m.k)}"><span class="mtx"><span class="t">${esc(m.name)}</span><span class="m">${esc(m.role)}</span><span class="o">${esc(m.one)}</span><span class="m">수업 ${m.lessons.length}개${d?` · ${d}개 해 봄`:""} ›</span></span></button>`;
 }
 function viewMaster(m){
   $("#v-lens").innerHTML = `
     <button class="chip" type="button" data-master="">‹ 대가 목록</button>
-    <div class="mhead">${wt(m.img, "mbig")}${m.img ? `<div data-gal="${esc(m.img)}"></div>` : ""}<p class="lead">${esc(m.name)}</p><p class="note">${esc(m.en)} · ${esc(m.years)} · ${esc(m.role)}</p></div>
+    <div class="mhead"><p class="lead">${esc(m.name)}</p><p class="note">${esc(m.en)} · ${esc(m.years)} · ${esc(m.role)}</p></div>
     <div class="card"><div class="lbl">어떤 사람</div><p>${esc(m.story)}</p><div class="lbl">멘탈리스트에서는</div><p>${esc(m.jane)}</p></div>
     <div class="risk"><div class="lbl">어디까지 믿을까</div>${esc(m.truth)}</div>
     <div class="card">${masterMap(m)}${bars([["수업의 근거 등급", "개", ["A","B","C","X"].map(k => [S.sc.grades[k][0], m.lessons.filter(l => l.ev===k).length]).filter(r => r[1])]])}</div>
@@ -515,7 +572,7 @@ function viewMaster(m){
     <p class="note">더 읽을 책 · 논문: ${m.books.map(esc).join(" · ")}</p>`;
   if(S.scrollLesson){ const el = document.getElementById("les-"+S.scrollLesson); S.scrollLesson = null; if(el) setTimeout(() => el.scrollIntoView({block:"start"}), 30); }
 }
-const lensSeg = () => `<div class="seg" role="group" aria-label="보기"><button type="button" data-lensmode="school" aria-pressed="${S.lensMode==="school"}">대가에게 배우기</button><button type="button" data-lensmode="concept" aria-pressed="${S.lensMode!=="school"}">개념 사전</button></div>`;
+const lensSeg = () => `<div class="seg" role="group" aria-label="보기"><button type="button" data-lensmode="school" aria-pressed="${S.lensMode==="school"}">대가</button><button type="button" data-lensmode="lab" aria-pressed="${S.lensMode==="lab"}">실험</button><button type="button" data-lensmode="concept" aria-pressed="${S.lensMode==="concept"}">개념</button></div>`;
 function viewSchool(){
   const box = $("#v-lens");
   if(!S.sc){ box.innerHTML = `<p class="lead">수업</p>${lensSeg()}<p class="note">${S.sc===false ? "수업 자료를 불러오지 못했어요. 새로고침해 주세요." : "수업을 불러오는 중이에요…"}</p>`; return; }
@@ -530,12 +587,13 @@ function viewSchool(){
     ${ct && ct.l ? `<article class="card acc"><div class="lbl">4주 코스 · ${esc(ct.w)} · ${ct.no}/${ct.total}</div><h3>${esc(ct.l.n)}</h3><p class="note">${esc(ct.l.m.name)}</p>${comic(ct.l.cm)}<div class="drill"><div class="lbl">오늘 해볼 것</div>${esc(ct.l.drill)}</div><button class="btn" type="button" data-lesson="${esc(ct.l.k)}">수업 열기</button></article>` : `<div class="card"><p class="note">4주 코스를 다 했어요. 아래에서 남은 수업을 골라 보세요.</p></div>`}
     <h2 class="sec"><span class="n">${S.sc.masters.length}명</span>대가</h2>
     <div class="stack">${S.sc.masters.map(masterCard).join("")}</div>
-    <p class="note">사진은 사람 얼굴 대신 그 수업을 떠올리게 하는 물건으로 골랐어요(위키백과 공용 사진).</p>`;
+`;
 }
-function goLesson(k){ const l = lessonBy(k); if(!l) return; closeSheet(); S.lensMode = "school"; S.master = l.m.k; S.openLesson = k; S.scrollLesson = k; if(S.view==="lens"){ viewLens(); window.scrollTo(0,0); } else go("lens"); }
+function goLesson(k){ const l = lessonBy(k); if(!l) return; closeSheet(); S.lensMode = "school"; if(!S.master){ S.masterY = S.view==="lens" ? window.scrollY : 0; setTimeout(() => pushLayer("vfmMaster"), 60); } S.master = l.m.k; S.openLesson = k; S.scrollLesson = k; if(S.view==="lens"){ viewLens(); window.scrollTo(0,0); } else go("lens"); }
 function schoolRows(){ return [["대가","수업","설명","예문","훈련","근거등급","근거","출처","관련 기술","해 본 날"], ...allLessons().map(l => [l.m.name, l.n, l.what, l.say.join(" / "), l.drill, (S.sc.grades[l.ev]||[""])[0], l.evn, l.src, l.techs.map(k => (S.catalog.techs||[]).find(t => t.k===k)?.n||k).join("/"), SU.done[l.k]||""])]; }
 
 function viewLens(){
+  if(S.lensMode==="lab"){ viewLab(); return; }
   if(S.lensMode==="school"){ viewSchool(); return; }
   const k = S.lens, CS = S.catalog.concepts || {};
   const groups = {};
@@ -548,7 +606,7 @@ function viewLens(){
     <div class="chips" role="group" aria-label="관점">${Object.entries(LENS).map(([kk,n]) => `<button class="chip" type="button" data-lens="${kk}" aria-pressed="${k===kk}">${n}</button>`).join("")}</div>
     <div class="top"><span class="pill ${done?"ok":""}">${LENS[k]} 개념 ${codes.length}개 · 카드 ${done} / ${S.uses.length}</span></div>
     ${codes.map(c => { const C = CS[c]; const list = groups[c].sort((a,b)=>a.id.localeCompare(b.id));
-      return `<details class="cpt"><summary><span>${esc(C.n)}</span><span class="n">${list.length}장 ›</span></summary><div class="body">${wt(MART.concept(c), "limg")}${comic([["한 줄로", [["you", "t", "'" + C.n + "'가 뭐예요?"], ["me", "s", cut1(C.b, 110)]]]])}<p>${esc(C.b)}</p><p class="note">근거: ${esc(C.src)}</p><div class="stack">${list.map(rowCard).join("")}</div></div></details>`; }).join("")}`;
+      return `<details class="cpt"><summary><span>${esc(C.n)}</span><span class="n">${list.length}장 ›</span></summary><div class="body"><p>${esc(C.b)}</p><p class="note">근거: ${esc(C.src)}</p><div class="stack">${list.map(rowCard).join("")}</div></div></details>`; }).join("")}`;
 }
 
 // ───────── 화면: 내 기록 ─────────
@@ -613,10 +671,18 @@ function viewLog(){
 // ───────── 시트(카드 펼치기) ─────────
 function openCard(id){
   const u = useById(id); if(!u) return;
+  if(!$("#sheetHost").innerHTML && !(history.state && history.state.vfmSheet)) pushLayer("vfmSheet");
   $("#sheetHost").innerHTML = `<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(u.name)}"><div class="grab"><b>${esc(u.id)}</b><button class="x" type="button" data-close>닫기</button></div><div class="body">${fullCard(u)}<button class="btn ghost" type="button" data-today="${esc(u.id)}">이 기술을 오늘 훈련으로</button></div></div>`;
   $("#sheetHost .x").focus();
 }
-function closeSheet(){ $("#sheetHost").innerHTML = ""; }
+// 뒤로가기: 카드 창이나 대가 페이지가 열려 있으면 그것만 닫고, 보던 목록·위치는 그대로
+function closeSheet(){ const open = !!$("#sheetHost").innerHTML; $("#sheetHost").innerHTML = ""; if(open && history.state && history.state.vfmSheet){ S.skipPop = true; history.back(); } }
+function pushLayer(k){ try{ history.pushState({[k]:1}, "", location.href); }catch(_){} }
+window.addEventListener("popstate", () => {
+  if(S.skipPop){ S.skipPop = false; return; }
+  if($("#sheetHost").innerHTML){ $("#sheetHost").innerHTML = ""; return; }
+  if(S.view==="lens" && S.master){ const y = S.masterY||0; S.master = null; viewLens(); window.scrollTo(0, y); }
+});
 
 // ───────── 렌더와 이동 ─────────
 const VIEWS = ["today","episodes","dex","lens","log"];
@@ -633,7 +699,9 @@ function go(v){ try{ history.replaceState(null, "", "#"+v); }catch(_){} show(v);
 document.querySelector("nav.tabs").addEventListener("click", e => { const b = e.target.closest("[data-v]"); if(!b) return; go(b.dataset.v); });
 window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 document.addEventListener("keydown", e => { if(e.key==="Escape") closeSheet(); });
-document.addEventListener("toggle", e => { const d = e.target; if(!d.classList || !d.classList.contains("les")) return; const k = d.id.slice(4); if(d.open) S.openLesson = k; else if(S.openLesson===k) S.openLesson = null; }, true);
+document.addEventListener("toggle", e => { const d = e.target; if(!d.classList) return;
+  if(d.classList.contains("xp")){ const id = d.id.slice(3), x = labBy(id); if(d.open && x){ const b = d.querySelector(".body"); if(!b.innerHTML) b.innerHTML = expBody(x) + `<button class="btn ${LU.read[id]?"ghost":"okb"}" type="button" data-labread="${esc(id)}">${LU.read[id]?"읽음 ✓":"읽었어요"}</button>`; S.openLab = id; if(!LU.read[id]){ LU.read[id] = TODAY; saveLU(); } } else if(S.openLab===id) S.openLab = null; return; }
+  if(!d.classList.contains("les")) return; const k = d.id.slice(4); if(d.open) S.openLesson = k; else if(S.openLesson===k) S.openLesson = null; }, true);
 
 document.addEventListener("click", e => {
   const t = e.target;
@@ -644,8 +712,13 @@ document.addEventListener("click", e => {
   const ep = t.closest("[data-ep]"); if(ep){ S.ep = ep.dataset.ep; viewEpisodes(); const el = document.getElementById("ep-"+ep.dataset.ep); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); return; }
   const dm = t.closest("[data-dexmode]"); if(dm){ S.dexMode = dm.dataset.dexmode; viewDex(); return; }
   const c = t.closest("[data-cat]"); if(c){ S.dexCat = c.dataset.cat; viewDex(); return; }
+  const xl = t.closest("[data-lab]"); if(xl){ goLab(xl.dataset.lab); return; }
+  const xf = t.closest("[data-labf]"); if(xf){ S.labF = xf.dataset.labf; S.openLab = null; viewLens(); return; }
+  const xr = t.closest("[data-labread]"); if(xr){ const k = xr.dataset.labread; if(LU.read[k]) delete LU.read[k]; else LU.read[k] = TODAY; saveLU(); viewLens(); return; }
   const lm = t.closest("[data-lensmode]"); if(lm){ S.lensMode = lm.dataset.lensmode; S.master = null; viewLens(); return; }
-  const ms = t.closest("[data-master]"); if(ms){ S.master = ms.dataset.master || null; viewLens(); window.scrollTo(0,0); return; }
+  const ms = t.closest("[data-master]"); if(ms){ const k = ms.dataset.master || null;
+    if(!k){ if(history.state && history.state.vfmMaster) history.back(); else { S.master = null; viewLens(); window.scrollTo(0, S.masterY||0); } return; }
+    S.masterY = window.scrollY; S.master = k; pushLayer("vfmMaster"); viewLens(); window.scrollTo(0,0); return; }
   const ls = t.closest("[data-lesson]"); if(ls){ goLesson(ls.dataset.lesson); return; }
   const ld = t.closest("[data-ldone]"); if(ld){ const k = ld.dataset.ldone; if(SU.done[k]) delete SU.done[k]; else { SU.done[k] = TODAY; toast("기록했어요"); } saveSU(); S.openLesson = k; if(S.view==="lens") viewLens(); else render(); return; }
   const l = t.closest("[data-lens]"); if(l){ S.lens = l.dataset.lens; viewLens(); return; }
@@ -711,6 +784,7 @@ function setLive(){
   $("#edchip").innerHTML = `<b>${Object.keys(S.catalog.seasons||{}).length}시즌</b>${Object.keys(S.eps).length}화 · ${S.uses.length}장`;
 }
 async function boot(){
+  fetch("../data/mental/lab.json", {cache:"no-cache"}).then(r => r.ok ? r.json() : Promise.reject()).then(j => { S.lab = j; const m = /^xp-([\w-]+)$/.exec(location.hash.slice(1)); if(m) goLab(m[1]); else if(S.view==="lens" && S.lensMode==="lab") viewLens(); }).catch(() => { S.lab = false; });
   fetch("../data/mental/school.json", {cache:"no-cache"}).then(r => r.ok ? r.json() : Promise.reject()).then(j => { S.sc = j; const m = /^les-(\w+)$/.exec(location.hash.slice(1)); if(m) goLesson(m[1]); else if(!$("#sheetHost").innerHTML && !$("#memo")) render(); }).catch(() => { S.sc = false; if(S.view==="lens") render(); });
   render();
   const cap = window.claude && typeof window.claude.use === "function" ? window.claude : null;
