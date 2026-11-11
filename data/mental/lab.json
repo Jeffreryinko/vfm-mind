@@ -760,6 +760,10 @@
 100.0
 ],
 "note": "수치는 대략적인 분포.",
+"fig": [
+"STS-51-L_-_Space_Shuttle_Challenger_on_the_Crawler-Transporter.jpg",
+"발사를 앞둔 우주왕복선 챌린저호 (1986년)"
+],
 "y": 1992
 },
 {
@@ -2263,6 +2267,10 @@
 24.0
 ],
 "note": "오늘날 기준으로는 허용되지 않는 동물 실험.",
+"fig": [
+"Nature_of_Love_Wire_and_cloth_mother_surrogates.jpg",
+"실험에 쓴 철사 엄마(왼쪽)와 헝겊 엄마"
+],
 "y": 1958
 },
 {
@@ -5438,6 +5446,10 @@
 "k_test"
 ],
 "note": "유명한 이름에 비해 증거가 약하다.",
+"fig": [
+"Hawthorne,_Illinois_Works_of_the_Western_Electric_Company,_1925.jpg",
+"1925년 무렵의 호손 공장"
+],
 "y": 1924
 },
 {
@@ -5574,6 +5586,10 @@
 ],
 10.0
 ],
+"fig": [
+"Rubber_hand_illusion.png",
+"실험 배치. 진짜 손은 가림막 뒤, 고무손이 눈앞에 있다"
+],
 "y": 1998
 },
 {
@@ -5602,6 +5618,10 @@
 ],
 "ls": [
 "m_blind"
+],
+"fig": [
+"Corpus_callosum.gif",
+"좌우 뇌를 잇는 다리(붉은 부분). 분리 뇌 환자는 이곳이 끊겨 있다"
 ],
 "y": 1960
 },
@@ -5789,6 +5809,10 @@
 ]
 ],
 5.0
+],
+"fig": [
+"Concorde_216_(G-BOAF)_last_flight.jpg",
+"본전 생각의 대표 사례로 꼽히는 콩코드 여객기"
 ],
 "y": 1985
 },
@@ -7567,6 +7591,10 @@
 ]
 ],
 50.0
+],
+"fig": [
+"Ganzfeld.jpg",
+"간츠펠트 실험의 받는 사람. 눈에 탁구공 반쪽, 귀에 잡음"
 ],
 "y": 1994
 },
