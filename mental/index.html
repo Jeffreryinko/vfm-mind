@@ -185,6 +185,13 @@ details.les .say::before{content:"“";color:var(--muted)}details.les .say::afte
 .cmx .you .bb{border-radius:14px 14px 4px 14px;background:var(--accent-soft)}
 .cmx .bb.th{background:none;border:1.5px dashed var(--line);color:var(--muted);font-size:13.5px}
 @media (min-width:700px){.cmx{grid-template-columns:repeat(3,1fr)}.cmx .bb{max-width:100%}}
+.ti{flex:none;width:22px;height:22px;color:var(--accent);margin-right:2px}
+.ti.big{width:38px;height:38px}
+.thead2{display:flex;gap:10px;align-items:center;margin:2px 0 6px}.thead2 b{display:block;font-size:14px}.thead2 small{display:block;font-size:12px;color:var(--muted);line-height:1.4}
+.sti{display:inline-flex;align-items:center;gap:6px}
+.tirow{display:flex;flex-wrap:wrap;gap:10px 14px;margin:4px 0 10px}.tib{display:inline-flex;flex-direction:column;align-items:center;gap:2px;width:58px;text-align:center}.tib .ti{width:30px;height:30px;margin:0}.tib small{font-size:11px;color:var(--muted);line-height:1.25}
+.tib.off .ti{color:var(--line)}
+.stair{width:100%;height:auto;display:block}
 .barx{margin:4px 0 10px;display:grid;gap:5px}
 .barx .br{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;font-size:13px}
 .barx .bn{grid-column:1/-1;color:var(--muted)}
@@ -277,14 +284,22 @@ function todayPick(){
 }
 
 // ───────── 카드 그리기 ─────────
+const cut1 = (t, n) => { t = String(t||"").trim(); const m = /^(.+?[.!?。요다])(\s|$)/.exec(t); let x = m ? m[1] : t; return x.length > n ? x.slice(0, n-1) + "…" : x; };
+// 장면 한눈에: 장면 → 단서 → 원리 → 결과를 만화 네 칸으로
+function storyboard(u){
+  return comic([["장면", [["you", "n", cut1(u.scene, 90)]]], ["제인이 본 것", [["me", "t", "(" + cut1(u.clue, 80) + ")"]]], ["원리", [["me", "w", cut1(u.principle, 90)]]], ["결과", [["you", u.level >= 3 ? "o" : "s", cut1(u.result, 80)]]]]);
+}
+const techOf = k => (S.catalog.techs||[]).find(t => t.k===k);
 function fullCard(u){
   const st = statsOf(u.id), an = S.analysis;
   const lensBox = k => { const a = an[u.id+"__"+k], c = a && (S.catalog.concepts||{})[a.c];
     if(!c) return `<div class="lens"><div class="lbl">${LENS[k]} · 예정</div>${esc(u.lens[k])}</div>`;
-    return `<div class="lens on"><div class="lbl">${LENS[k]} · ${esc(c.n)}</div>${a.s?`<p class="scn"><b>이 장면에서는</b> ${esc(a.s)}</p>`:""}<p>${esc(c.b)}</p><div class="src">이 장면의 주제: ${esc(a.title)}</div><div class="src">근거: ${esc(c.src)}</div></div>`; };
+    return `<div class="lens on">${wt(MART.concept(a.c), "limg")}<div class="lbl">${LENS[k]} · ${esc(c.n)}</div>${a.s?`<p class="scn"><b>이 장면에서는</b> ${esc(a.s)}</p>`:""}<p>${esc(c.b)}</p><div class="src">이 장면의 주제: ${esc(a.title)}</div><div class="src">근거: ${esc(c.src)}</div></div>`; };
   return `<article class="card acc">
     <div class="top"><span class="no">${esc(u.id)}</span>${u.cat.map(k=>`<span class="pill acc">${esc(catName(k))}</span>`).join("")}<span class="pill ${VER[u.verified][1]}">${VER[u.verified][0]}</span></div>
+    ${u.tech ? `<div class="thead2">${MART.icon(u.tech, "big")}<span><b>${esc(techOf(u.tech)?.n || "")}</b><small>${esc(techOf(u.tech)?.d || "")}</small></span></div>${wt(MART.tech(u.tech), "mbig")}` : ""}
     <h3>${esc(u.name)}</h3>
+    ${storyboard(u)}
     <div class="top"><span class="note">난이도</span><span class="lv" aria-label="난이도 ${u.level} / 3">${lvStars(u.level)}</span><span class="note">· 해본 횟수 ${st.tries} · 잘 된 횟수 ${st.ok}</span></div>
     <div><div class="lbl">장면</div><p>${esc(u.scene)}</p></div>
     <div class="box"><div class="lbl">단서</div>${esc(u.clue)}</div>
@@ -294,12 +309,13 @@ function fullCard(u){
     <div class="risk"><div class="lbl">위험 · 윤리</div>${esc(u.risk)}</div>
     ${(() => { const ls = allLessons().filter(l => l.techs[0]===u.tech || l.techs.includes(u.tech)).sort((a,b) => (a.techs[0]===u.tech?0:1) - (b.techs[0]===u.tech?0:1)).slice(0,4); return ls.length ? `<div><div class="lbl">대가에게 배우기</div><div class="chips">${ls.map(l => `<button class="chip" type="button" data-lesson="${esc(l.k)}">${esc(l.m.name.split(" · ")[0])} · ${esc(l.n)}</button>`).join("")}</div></div>` : ""; })()}
     <div class="lenses">${["psy","phi","sci"].map(lensBox).join("")}</div>
+    ${u.tech && MART.tech(u.tech) ? `<div data-gal="${esc(MART.tech(u.tech))}"></div>` : ""}
   </article>`;
 }
 function rowCard(u){
   const st = statsOf(u.id);
   return `<button class="row" type="button" data-open="${esc(u.id)}">
-    <span class="no">${esc(u.id.slice(-2))}</span>
+    <span class="no">${esc(u.id.slice(-2))}</span>${MART.icon(u.tech)}
     <span class="grow"><span class="t">${esc(u.name)}</span><span class="m">${u.cat.map(catName).map(esc).join(" · ")} · <span class="lv">${lvStars(u.level)}</span>${st.tries?` · ${st.tries}회`:""}</span></span>
     <span class="chev" aria-hidden="true">›</span></button>`;
 }
@@ -368,6 +384,8 @@ function epBlock(ep){
       <p>${esc(ep.summary)}</p>
       <dl class="kv"><dt>방영</dt><dd>${esc(ep.aired)}</dd><dt>인물</dt><dd>${esc(ep.people)}</dd><dt>대조 자료</dt><dd>${esc(ep.source)}</dd><dt>기술</dt><dd>${list.length}장 · 대본 대조 ${list.filter(u=>u.verified==="script").length}장</dd></dl>
     </div>
+    ${(() => { const cnt = {}; list.forEach(u => { if(u.tech) cnt[u.tech] = (cnt[u.tech]||0) + 1; }); const rows = Object.entries(cnt).sort((a,b) => b[1]-a[1]);
+      return rows.length ? `<div class="card"><div class="lbl">이 회차에 나온 기술</div><div class="tirow">${rows.map(([k,v]) => `<span class="tib">${MART.icon(k)}<small>${esc((techOf(k)?.n||k).split(" · ")[0])} ${v}</small></span>`).join("")}</div>${bars([["장면 난이도", "장", [["●○○ 쉬움", list.filter(u => u.level===1).length], ["●●○ 보통", list.filter(u => u.level===2).length], ["●●● 어려움", list.filter(u => u.level===3).length]]]])}</div>` : ""; })()}
     <div class="stack" aria-label="장면 순서">${list.map(rowCard).join("")}</div>`;
 }
 
@@ -390,14 +408,22 @@ function viewMap(){
     <p class="lead">기술 도감</p>${dexSeg()}
     <p class="note">151화에 흩어진 ${S.uses.length}장을 같은 기술 ${TS.length}개로 묶고, 쉬운 것부터 ${ST.length}단계로 줄 세웠어요. 위에서부터 한 기술씩, 기술 안에서는 난이도 낮은 장면부터 따라 하면 돼요.</p>
     ${nu ? `<article class="card acc"><div class="lbl">다음 연습 · ${esc(next.n)}</div><h3>${esc(nu.name)}</h3><div class="drill"><div class="lbl">훈련</div>${esc(nu.drill)}</div><button class="btn" type="button" data-open="${esc(nu.id)}">장면 열기</button></article>` : `<div class="card"><p class="note">모든 기술을 한 번 이상 해 봤어요. 이제 기술마다 난이도 ●●● 장면에 도전해 보세요.</p></div>`}
+    <div class="card">${stairs(ST, TS, by, tried)}</div>
     ${ST.map((s, si) => { const ts = TS.filter(t => t.stage===s.k && (by[t.k]||[]).length); if(!ts.length) return "";
       const all = ts.flatMap(t => by[t.k]); const tr = tried(all);
-      return `<h2 class="sec"><span class="n">${si+1}단계</span>${esc(s.n)}</h2><p class="note">${esc(s.d)} · ${all.length}장 중 ${tr}장 해 봄</p>
+      return `<h2 class="sec"><span class="n">${si+1}단계</span>${esc(s.n)}</h2>${wt(MART.stage(s.k), "mbig")}<p class="note">${esc(s.d)} · ${all.length}장 중 ${tr}장 해 봄</p>
       ${ts.map(t => { const l = by[t.k]; no++; const tn = tried(l);
-        return `<details class="cpt"><summary><span>${no}. ${esc(t.n)}</span><span class="n">${tn?`${tn}/`:""}${l.length}장 ›</span></summary><div class="body">
-          <p>${esc(t.d)}.</p><p class="note">${seasons(l)} · 평균 난이도 <span class="lv">${lvStars(avg(l))}</span> · 처음 나온 장면 ${esc(l.slice().sort((a,b)=>a.id.localeCompare(b.id))[0].id)}</p>
+        return `<details class="cpt"><summary><span class="sti">${MART.icon(t.k)}${no}. ${esc(t.n)}</span><span class="n">${tn?`${tn}/`:""}${l.length}장 ›</span></summary><div class="body">
+          ${wt(MART.tech(t.k), "limg")}<p>${esc(t.d)}.</p>
+          ${bars([["난이도별 장면 수", "장", [["●○○", l.filter(u => u.level===1).length], ["●●○", l.filter(u => u.level===2).length], ["●●●", l.filter(u => u.level===3).length]]]])}<p class="note">${seasons(l)} · 평균 난이도 <span class="lv">${lvStars(avg(l))}</span> · 처음 나온 장면 ${esc(l.slice().sort((a,b)=>a.id.localeCompare(b.id))[0].id)}</p>
           <div class="drill"><div class="lbl">처음 해볼 훈련 · ${esc(l[0].name)}</div>${esc(l[0].drill)}</div>
           <div class="stack">${l.map(rowCard).join("")}</div></div></details>`; }).join("")}`; }).join("")}`;
+}
+// 8단계 계단 그림: 단마다 장면 수, 해 본 만큼 색이 참
+function stairs(ST, TS, by, tried){
+  const W = 320, H = 150, n = ST.length, sw = (W - 8) / n;
+  return `<svg class="stair" viewBox="0 0 ${W} ${H}" role="img" aria-label="훈련 8단계">` + ST.map((s, i) => { const all = TS.filter(t => t.stage===s.k).flatMap(t => by[t.k]||[]), tr = tried(all), h = 26 + i * 13, x = 4 + i * sw, y = H - 22 - h, f = all.length ? tr / all.length : 0;
+    return `<rect x="${x}" y="${y}" width="${sw-3}" height="${h}" rx="4" fill="var(--sunk)"/><rect x="${x}" y="${y + h * (1-f)}" width="${sw-3}" height="${h * f}" rx="4" fill="var(--accent)"/><text x="${x + (sw-3)/2}" y="${y - 4}" text-anchor="middle" font-size="10" fill="var(--muted)">${all.length}</text><text x="${x + (sw-3)/2}" y="${H - 8}" text-anchor="middle" font-size="9.5" fill="var(--ink,currentColor)">${i+1}</text>`; }).join("") + `</svg><p class="note" style="margin:2px 0 0">1단계 '눈 뜨기'부터 8단계 '함정 알아보기'까지. 숫자는 장면 수, 색은 해 본 만큼 차요.</p>`;
 }
 function viewDex(){
   if(S.dexMode==="map"){ viewMap(); return; }
@@ -522,7 +548,7 @@ function viewLens(){
     <div class="chips" role="group" aria-label="관점">${Object.entries(LENS).map(([kk,n]) => `<button class="chip" type="button" data-lens="${kk}" aria-pressed="${k===kk}">${n}</button>`).join("")}</div>
     <div class="top"><span class="pill ${done?"ok":""}">${LENS[k]} 개념 ${codes.length}개 · 카드 ${done} / ${S.uses.length}</span></div>
     ${codes.map(c => { const C = CS[c]; const list = groups[c].sort((a,b)=>a.id.localeCompare(b.id));
-      return `<details class="cpt"><summary><span>${esc(C.n)}</span><span class="n">${list.length}장 ›</span></summary><div class="body"><p>${esc(C.b)}</p><p class="note">근거: ${esc(C.src)}</p><div class="stack">${list.map(rowCard).join("")}</div></div></details>`; }).join("")}`;
+      return `<details class="cpt"><summary><span>${esc(C.n)}</span><span class="n">${list.length}장 ›</span></summary><div class="body">${wt(MART.concept(c), "limg")}${comic([["한 줄로", [["you", "t", "'" + C.n + "'가 뭐예요?"], ["me", "s", cut1(C.b, 110)]]]])}<p>${esc(C.b)}</p><p class="note">근거: ${esc(C.src)}</p><div class="stack">${list.map(rowCard).join("")}</div></div></details>`; }).join("")}`;
 }
 
 // ───────── 화면: 내 기록 ─────────
@@ -552,6 +578,11 @@ function viewLog(){
       <div class="tile"><b>${tries.length}</b><span>해본 횟수</span></div>
       <div class="tile"><b>${tries.length?Math.round(oks.length/tries.length*100)+"%":"—"}</b><span>잘 된 비율</span></div>
     </div>
+    ${(() => { const tc = {}; tries.forEach(e => { const k = useById(e.useId)?.tech; if(k) tc[k] = (tc[k]||0) + 1; });
+      const rows = (S.catalog.techs||[]).map(t => [t.n.split(" · ")[0], tc[t.k]||0, t.k]);
+      const ms = (S.sc?.masters||[]).map(x => [x.name.split(" · ")[0], x.lessons.filter(l => SU.done[l.k]).length, x.lessons.length]);
+      return `<h2 class="sec"><span class="n">${rows.filter(r => r[1]).length}/${rows.length}</span>기술별 해 본 횟수</h2><div class="card"><div class="tirow">${rows.map(r => `<span class="tib${r[1]?"":" off"}">${MART.icon(r[2])}<small>${esc(r[0])} ${r[1]||""}</small></span>`).join("")}</div></div>
+      ${ms.length ? `<h2 class="sec"><span class="n">${ms.reduce((n,r) => n+r[1], 0)}/${ms.reduce((n,r) => n+r[2], 0)}</span>대가 수업 진도</h2><div class="card">${bars([["해 본 수업", "개", ms.map(r => [r[0] + " (" + r[2] + "개 중)", r[1]]), Math.max(...ms.map(r => r[2]))]])}</div>` : ""}`; })()}
     <h2 class="sec"><span class="n">${m}월</span>훈련 달력</h2>
     <div class="cal">${cal}</div>
     <p class="note">초록은 훈련한 날, 금색은 '못했어요'만 기록한 날이에요.</p>
@@ -714,6 +745,7 @@ boot();
 </script>
 <script src="../assets/wikithumb.js"></script>
 <script src="../assets/wikigal.js"></script>
+<script src="art.js?v=1"></script>
 <script src="../assets/shell.js"></script>
 </body>
 </html>
