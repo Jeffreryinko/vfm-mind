@@ -185,6 +185,16 @@ details.les .say::before{content:"“";color:var(--muted)}details.les .say::afte
 .cmx .you .bb{border-radius:14px 14px 4px 14px;background:var(--accent-soft)}
 .cmx .bb.th{background:none;border:1.5px dashed var(--line);color:var(--muted);font-size:13.5px}
 @media (min-width:700px){.cmx{grid-template-columns:repeat(3,1fr)}.cmx .bb{max-width:100%}}
+.barx{margin:4px 0 10px;display:grid;gap:5px}
+.barx .br{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;font-size:13px}
+.barx .bn{grid-column:1/-1;color:var(--muted)}
+.barx .bt{height:14px;border-radius:7px;background:var(--sunk);overflow:hidden}
+.barx .bt i{display:block;height:100%;border-radius:7px;background:var(--accent)}
+.barx .bt i.b2{background:var(--coin,#c98a00)}
+.barx b{font-variant-numeric:tabular-nums;font-size:13.5px;min-width:3.2em;text-align:right}
+.gz{display:inline-flex;gap:2px;vertical-align:-1px;margin-right:4px}
+.gz i{width:9px;height:9px;border-radius:2px;background:var(--line)}
+.gz i.on.ok{background:var(--ok)}.gz i.on.acc{background:var(--accent)}.gz i.on.warn{background:var(--warn)}.gz i.on.bad{background:var(--bad)}
 .chk{color:var(--ok);font-weight:700}
 #v-lens .seg{margin:8px 0}
 #toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:13px;z-index:40;max-width:90vw;text-align:center}
@@ -429,6 +439,19 @@ function comic(cm){
   if(!cm || !cm.length) return "";
   return `<div class="cmx" role="img" aria-label="수업 만화">${cm.map(([cap, who], i) => `<div class="pn"><div class="cap"><b>${i+1}</b>${esc(cap)}</div>${who.map(([w, mood, tx]) => `<div class="ln ${w}">${face(w, mood)}${tx ? `<span class="bb${/^\(.*\)$/.test(tx) ? " th" : ""}">${esc(tx)}</span>` : ""}</div>`).join("")}</div>`).join("")}</div>`;
 }
+// 막대 그림: [제목, 단위, [[이름, 값]…], 최댓값?]
+function bars(list){
+  return (list||[]).map(([title, unit, rows, mx]) => { const top = mx || Math.max(...rows.map(r => r[1]));
+    return `<div class="barx" role="img" aria-label="${esc(title)}"><div class="lbl">${esc(title)}</div>${rows.map(([n, v], i) => `<div class="br"><span class="bn">${esc(n)}</span><span class="bt"><i class="${i?"b2":""}" style="width:${Math.max(3, v/top*100)}%"></i></span><b>${v}${esc(unit)}</b></div>`).join("")}</div>`; }).join("");
+}
+// 근거 계기판: 반박됨 · 경험담 · 보통 · 튼튼
+const gauge = ev => `<span class="gz" aria-hidden="true">${["X","C","B","A"].map(k => `<i class="${k===ev?"on "+GR[k]:""}"></i>`).join("")}</span>`;
+// 대가의 수업이 어느 기술에 닿는지
+function masterMap(m){
+  const cnt = {}; m.lessons.forEach(l => l.techs.forEach(k => cnt[k] = (cnt[k]||0) + 1));
+  const rows = Object.entries(cnt).sort((a,b) => b[1]-a[1]).slice(0,6).map(([k,v]) => [(S.catalog.techs||[]).find(t => t.k===k)?.n || k, v]);
+  return rows.length ? bars([["이 대가의 수업이 닿는 기술", "개", rows]]) : "";
+}
 function courseToday(){
   const seq = (S.sc?.course||[]).flatMap(([w, ks]) => ks.map(k => ({w, k})));
   const i = seq.findIndex(x => !SU.done[x.k]);
@@ -442,9 +465,10 @@ function lessonHtml(l, open){
     ${comic(l.cm)}
     ${wt(l.img, "limg")}
     <p>${esc(l.what)}</p>
+    ${bars(l.bar)}
     ${l.say.length?`<div class="box"><div class="lbl">이렇게 말해요</div>${l.say.map(x => `<p class="say">${esc(x)}</p>`).join("")}</div>`:""}
     <div class="drill"><div class="lbl">오늘 해볼 것</div>${esc(l.drill)}</div>
-    <div class="lens on"><div class="lbl">근거 · ${esc(g[0])} <span class="note">(${esc(g[1])})</span></div><p>${esc(l.evn)}</p><div class="src">${esc(l.src)}</div></div>
+    <div class="lens on"><div class="lbl">${gauge(l.ev)} 근거 · ${esc(g[0])} <span class="note">(${esc(g[1])})</span></div><p>${esc(l.evn)}</p><div class="src">${esc(l.src)}</div></div>
     ${rel.length?`<div class="lbl" style="margin-top:8px">제인은 이렇게 써요${tn.length?` · ${esc(tn.slice(0,2).join(" · "))}`:""}</div><div class="stack">${rel.map(rowCard).join("")}</div>`:""}
     <button class="btn ${done?"ghost":"okb"}" type="button" data-ldone="${esc(l.k)}">${done?"해 봄 ✓ (취소)":"해봤어요"}</button>
   </div></details>`;
@@ -459,6 +483,7 @@ function viewMaster(m){
     <div class="mhead">${wt(m.img, "mbig")}<p class="lead">${esc(m.name)}</p><p class="note">${esc(m.en)} · ${esc(m.years)} · ${esc(m.role)}</p></div>
     <div class="card"><div class="lbl">어떤 사람</div><p>${esc(m.story)}</p><div class="lbl">멘탈리스트에서는</div><p>${esc(m.jane)}</p></div>
     <div class="risk"><div class="lbl">어디까지 믿을까</div>${esc(m.truth)}</div>
+    <div class="card">${masterMap(m)}${bars([["수업의 근거 등급", "개", ["A","B","C","X"].map(k => [S.sc.grades[k][0], m.lessons.filter(l => l.ev===k).length]).filter(r => r[1])]])}</div>
     <h2 class="sec"><span class="n">${m.lessons.length}개</span>수업</h2>
     ${m.lessons.map(l => lessonHtml(l, S.openLesson===l.k)).join("")}
     <p class="note">더 읽을 책 · 논문: ${m.books.map(esc).join(" · ")}</p>`;
