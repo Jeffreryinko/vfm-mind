@@ -480,7 +480,7 @@ function masterCard(m){
 function viewMaster(m){
   $("#v-lens").innerHTML = `
     <button class="chip" type="button" data-master="">‹ 대가 목록</button>
-    <div class="mhead">${wt(m.img, "mbig")}<p class="lead">${esc(m.name)}</p><p class="note">${esc(m.en)} · ${esc(m.years)} · ${esc(m.role)}</p></div>
+    <div class="mhead">${wt(m.img, "mbig")}${m.img ? `<div data-gal="${esc(m.img)}"></div>` : ""}<p class="lead">${esc(m.name)}</p><p class="note">${esc(m.en)} · ${esc(m.years)} · ${esc(m.role)}</p></div>
     <div class="card"><div class="lbl">어떤 사람</div><p>${esc(m.story)}</p><div class="lbl">멘탈리스트에서는</div><p>${esc(m.jane)}</p></div>
     <div class="risk"><div class="lbl">어디까지 믿을까</div>${esc(m.truth)}</div>
     <div class="card">${masterMap(m)}${bars([["수업의 근거 등급", "개", ["A","B","C","X"].map(k => [S.sc.grades[k][0], m.lessons.filter(l => l.ev===k).length]).filter(r => r[1])]])}</div>
@@ -713,6 +713,7 @@ boot();
 })();
 </script>
 <script src="../assets/wikithumb.js"></script>
+<script src="../assets/wikigal.js"></script>
 <script src="../assets/shell.js"></script>
 </body>
 </html>
