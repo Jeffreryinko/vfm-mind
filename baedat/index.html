@@ -303,13 +303,21 @@ nav.tabs button[aria-current="page"]{color:var(--tint);font-weight:600}
 .rcard .media.pl.v .player{height:min(56vh,520px)}
 @media (min-width:640px){
   /* 넓은 화면(폴드 펼침·태블릿): 세로 영상은 왼쪽에 9:16 그대로, 댓글을 내려도 따라오게(sticky). 검은 칸으로 늘어나지 않음 */
-  .rcard.vert{--vh:min(calc(100dvh - 230px),640px);display:grid;grid-template-columns:calc(var(--vh) * 9 / 16 + 24px) minmax(0,1fr);align-items:start;overflow:visible}
+  .rcard.vert{--vh:min(calc(100dvh - 150px),820px);display:grid;grid-template-columns:calc(var(--vh) * 9 / 16 + 24px) minmax(0,1fr);align-items:start;overflow:visible}
   .rcard.vert .media.v{grid-row:1 / span 2;position:sticky;top:12px;align-self:start;height:auto;min-height:0;padding:12px;background:none;overflow:visible;aspect-ratio:auto}
   .rcard.vert .media.v::before{display:none}
   .rcard.vert .media.v .play{display:block;width:100%}
   .rcard.vert .media.v .th,.rcard.vert .media.pl.v .player{display:block;width:100%;height:auto;aspect-ratio:9/16;border-radius:14px;overflow:hidden;background:#111}
   .rcard.vert .media.v .th img{width:100%;height:100%;object-fit:cover}
-  .rcard.vert .rcb{padding:18px 20px 18px 8px;min-width:0}
+  .rcard.vert .rcb{padding:16px 18px 16px 6px;min-width:0}
+  /* 넓은 화면은 글자 한 단계 작게 */
+  .tcard .tc>p:first-child{font-size:16px;line-height:1.45}
+  .tcard .tc:first-child>p:first-child{font-size:17.5px}
+  .tcard.talk .tc>p:first-child,.tcard.talk .tc:first-child>p:first-child{font-size:15px}
+  .tcard .tc{padding-top:8px;padding-bottom:8px}
+  .tcard .tc::before{top:10px}
+  .tcard .tc .trep{font-size:12.5px}
+  .tcard .trate button{width:36px;height:29px;font-size:15.5px}
 }
 @media (prefers-reduced-motion:reduce){.rcard{transition:none}}
 .rate{display:flex;gap:6px;margin-top:2px}
