@@ -302,12 +302,14 @@ nav.tabs button[aria-current="page"]{color:var(--tint);font-weight:600}
 .rcard .media.v .th{height:min(56vh,520px)}
 .rcard .media.pl.v .player{height:min(56vh,520px)}
 @media (min-width:640px){
-  .rcard.vert{display:grid;grid-template-columns:auto 1fr;align-items:start}
-  .rcard.vert .media.v{grid-row:1 / span 2;height:100%;min-height:min(62vh,600px);align-items:center;padding:0}
-  .rcard.vert .media.v .th,.rcard.vert .media.pl.v .player{height:min(62vh,600px)}
+  /* 넓은 화면(폴드 펼침·태블릿): 세로 영상은 왼쪽에 9:16 그대로, 댓글을 내려도 따라오게(sticky). 검은 칸으로 늘어나지 않음 */
+  .rcard.vert{--vh:min(calc(100dvh - 230px),640px);display:grid;grid-template-columns:calc(var(--vh) * 9 / 16 + 24px) minmax(0,1fr);align-items:start;overflow:visible}
+  .rcard.vert .media.v{grid-row:1 / span 2;position:sticky;top:12px;align-self:start;height:auto;min-height:0;padding:12px;background:none;overflow:visible;aspect-ratio:auto}
   .rcard.vert .media.v::before{display:none}
-  .rcard.vert .media.v{background:#000}
-  .rcard.vert .rcb{padding:18px 20px;min-width:0}
+  .rcard.vert .media.v .play{display:block;width:100%}
+  .rcard.vert .media.v .th,.rcard.vert .media.pl.v .player{display:block;width:100%;height:auto;aspect-ratio:9/16;border-radius:14px;overflow:hidden;background:#111}
+  .rcard.vert .media.v .th img{width:100%;height:100%;object-fit:cover}
+  .rcard.vert .rcb{padding:18px 20px 18px 8px;min-width:0}
 }
 @media (prefers-reduced-motion:reduce){.rcard{transition:none}}
 .rate{display:flex;gap:6px;margin-top:2px}
@@ -434,7 +436,8 @@ const count = (arr, f) => { const m={}; arr.forEach(x => { const k=f(x); if(k) m
 const thumbSrc = (id, big) => `https://i.ytimg.com/vi/${encodeURIComponent(id)}/${big?"maxresdefault":"mqdefault"}.jpg`;
 function hydrate(){}
 const isV = v => !!(v.ar && v.ar < 1);
-const thumb = (v, extra="", big=false) => `<span class="th"><img src="${isV(v) ? `https://i.ytimg.com/vi/${encodeURIComponent(v.id)}/hqdefault.jpg` : thumbSrc(v.id, big)}" alt="" loading="lazy" decoding="async" onload="if(this.naturalWidth<=120&&!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('maxresdefault','hqdefault');return}this.classList.add('on')" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('maxresdefault','hqdefault')}else this.remove()"><span class="ph" aria-hidden="true"></span>${extra}</span>`;
+const thumb = (v, extra="", big=false) => { const id = encodeURIComponent(v.id), src = isV(v) ? `https://i.ytimg.com/vi/${id}/oar2.jpg` : thumbSrc(v.id, big), alt = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+  return `<span class="th"><img src="${src}" data-alt="${alt}" alt="" loading="lazy" decoding="async" onload="if(this.naturalWidth<=120&&!this.dataset.f){this.dataset.f=1;this.src=this.dataset.alt;return}this.classList.add('on')" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.dataset.alt}else this.remove()"><span class="ph" aria-hidden="true"></span>${extra}</span>`; };
 const YTQ = () => `enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
 const YTL = `onload="try{this.contentWindow.postMessage(JSON.stringify({event:'listening',id:1,channel:'widget'}),'*')}catch(_){}"`;
 const playerHtml = id => `<div class="player" data-player="${esc(id)}"><iframe ${YTL} src="https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1&playsinline=1&rel=0&${YTQ()}" title="유튜브 플레이어" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`;
