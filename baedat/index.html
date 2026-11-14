@@ -350,7 +350,7 @@ button.pill{border:0;cursor:pointer}
 .thead .lead{margin:0}
 .tcard{margin-top:10px}
 .tcard .ttl{line-height:1.4;overflow-wrap:anywhere}
-.tline{margin:0;font-size:13.5px;color:var(--muted);line-height:1.45}
+.tline{margin:0;font-size:13.5px;color:var(--muted);line-height:1.45}.tline.ai{margin:4px 0 2px;padding:7px 10px;border-radius:10px;background:var(--ap-fill,rgba(120,120,128,.1));color:var(--ink,inherit);font-size:13.5px}.tline.ai::before{content:'맥락 ';font-weight:700;color:var(--accent,#0A84FF)}.twhy{margin:2px 0 4px;font-size:12.5px;color:var(--muted);line-height:1.45}
 .tcl{list-style:none;margin:4px 0 0;padding:0;border-top:.5px solid var(--sep)}
 .tc{padding:10px 0;border-bottom:.5px solid var(--sep)}
 .tc:last-child{border-bottom:0}
@@ -691,7 +691,8 @@ function rawCard(c, V, left, total){
     <div class="rcb">
       <div class="rwv">${esc(v[1])} · ${esc(v[4])} · 조회 ${kNum(v[3])}</div>
       <div class="rct">${esc(v[0])}</div>
-      <p class="rtx">${esc(c[2])}</p>
+      ${aiV(c[0])?.l ? `<p class="tline ai">${esc(aiV(c[0]).l)}</p>` : ""}
+      <p class="rtx">${esc(c[2])}</p>${aiC(c)?.w ? `<p class="twhy">💡 ${esc(aiC(c).w)}</p>` : ""}
       <div class="lmeta"><span>좋아요 ${kNum(c[3])}</span><span>답글 ${kNum(c[4])}</span><span>${esc(c[5])}</span><a href="${at(c[0], c[1])}" target="_blank" rel="noopener">댓글 원문</a><a href="${watch(c[0])}${st?`&t=${st}s`:""}" target="_blank" rel="noopener">유튜브에서 보기</a></div>
       ${others.length ? `<div class="b5"><div class="lbl">이 영상 다른 배댓 ${others.length}</div>${others.map(o => `<div class="b5i"><p>${esc(o[2])}</p><span class="note">좋아요 ${kNum(o[3])}${LGU.rate[o[1]]?` · ${["","😐","🙂","🤣"][LGU.rate[o[1]]]}`:""}</span></div>`).join("")}</div>` : ""}
     </div>
@@ -790,7 +791,14 @@ function setTMode(m){ TMODE = m; try{ localStorage.setItem(TKEY + ":mode", m); }
 const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 const shuf = (a, r) => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const chOf = v => v[7] || v[1];
+/* AI 고르기 (robot/baedat_ai.py → ai.json): 영상 v[vid]={l:맥락 한 줄, s:1~5}, 댓글 c[cid]={s:0~5, w:드립 풀이} */
+let AI = {v:{}, c:{}};
+const AIP = fetch(BASE + "ai.json", {cache:"no-store"}).then(r => r.ok ? r.json() : null).then(j => { if(j) AI = j; }).catch(()=>{});
+const aiV = vid => AI.v[vid] || null, aiC = c => AI.c[c[1]] || null;
+const pickCs = arr => { const a = arr.filter(c => { const x = aiC(c); return !x || x.s > 0; }); const sc = c => { const x = aiC(c); return (x ? x.s : 2.5) * 1e7 + c[3]; }; return a.sort((p, q) => sc(q) - sc(p)).slice(0, 5); };
+const vScore = x => { const a = aiV(x.vid); return a ? a.s : 2.5; };
 async function buildToday(round){
+  await AIP;
   const pre = TMODE==="talk" ? "t:" : "", raws = (TMODE==="talk" ? S.LG.talks : S.LG.raws) || [], r = rng(dayNo() * 31 + round + (pre ? 7 : 0));
   const live = raws.filter(x => x.live).map(x => pre + x.month);
   const older = shuf(raws.map(x => pre + x.month).filter(m => !live.includes(m)), r).slice(0, (pre ? 8 : 4) + round * 2);
@@ -799,12 +807,12 @@ async function buildToday(round){
   const have = new Set((TD && TD.date===kday() ? TD.ids : []).map(x => x[0]));
   const items = [];
   Rs.forEach(R => { const by = {}; R.comments.forEach(c => (by[c[0]] = by[c[0]] || []).push(c));
-    Object.entries(R.videos).forEach(([vid, v]) => { const cs = (by[vid] || []).slice(0, 5); if(!cs.length || LGU.seen[vid] || LGU.block[chOf(v)] || have.has(vid) || cs.every(c => LGU.rate[c[1]])) return; items.push({vid, m:R.month, v, cs}); }); });
+    Object.entries(R.videos).forEach(([vid, v]) => { const cs = pickCs(by[vid] || []); if(!cs.length || (aiV(vid) && aiV(vid).s <= 1) || LGU.seen[vid] || LGU.block[chOf(v)] || have.has(vid) || cs.every(c => LGU.rate[c[1]])) return; items.push({vid, m:R.month, v, cs}); }); });
   const now = Date.now(), isNew = x => (now - Date.parse(x.v[2])) / 864e5 <= 7;
   const M = tasteModel(), useT = M.n >= 10 && M.np && M.nn;
-  const nw = items.filter(isNew).sort((a,b) => b.cs[0][3] - a.cs[0][3]);
-  let old = shuf(items.filter(x => !isNew(x)), r);
-  if(useT){ const sc = new Map(old.map(x => [x, x.cs.reduce((s,c) => s + tasteScore(M, c, {[x.vid]:x.v}), 0) / x.cs.length + r() * 3])); old.sort((a,b) => sc.get(b) - sc.get(a)); }
+  const nw = items.filter(isNew).sort((a,b) => (vScore(b) - vScore(a)) * 1e7 + b.cs[0][3] - a.cs[0][3]);
+  let old = shuf(items.filter(x => !isNew(x)), r).map(x => [x, vScore(x) + r() * 1.6]).sort((a, b) => b[1] - a[1]).map(a => a[0]);
+  if(useT){ const sc = new Map(old.map(x => [x, x.cs.reduce((s,c) => s + tasteScore(M, c, {[x.vid]:x.v}), 0) / x.cs.length + r() * 3 + vScore(x) * 1.2])); old.sort((a,b) => sc.get(b) - sc.get(a)); }
   const pool = [...nw.slice(0, 12), ...old, ...nw.slice(12)], out = [], perCh = {}, perCat = {};
   let fresh = 0;
   const known = ch => !!LGU.chs[ch];
@@ -835,7 +843,7 @@ async function todayMore(){
   if(!more.length){ toast("창고에 안 본 영상이 더 없어요"); draw(); return; }
   TD.ids.push(...more); saveTD(); await Promise.all([...new Set(more.map(x => x[1]))].map(loadRawP)); draw(); window.scrollTo(0,0);
 }
-const tItem = i => { const [vid, m] = TD.ids[i] || []; const R = S.RW[m]; const v = R && R.videos ? R.videos[vid] : null; return v ? {vid, m, v, cs:R.comments.filter(c => c[0]===vid).slice(0,5)} : null; };
+const tItem = i => { const [vid, m] = TD.ids[i] || []; const R = S.RW[m]; const v = R && R.videos ? R.videos[vid] : null; return v ? {vid, m, v, cs:pickCs(R.comments.filter(c => c[0]===vid))} : null; };
 function todayStep(d){
   if(!TD) return;
   if(d > 0 && TD.i < TD.ids.length){ const x = tItem(TD.i); if(x){ LGU.seen[x.vid] = dayNo(); const ch = chOf(x.v); LGU.chs[ch] = (LGU.chs[ch]||0) + 1; saveLGU(); } }
@@ -846,7 +854,7 @@ function todayCard(x, i, n){
   const {vid, v, cs} = x, vert = v[5] && v[5] < 1, vv = {id:vid, title:v[0], ar:v[5]};
   const media = playing===vid ? lplayerHtml(vid, S.lstart, S.lnonce)
     : `<button type="button" class="play" data-lplay="${esc(vid)}" data-start="0" aria-label="${esc(v[0])} 재생">${thumb(vv, `${v[6]?`<span class="dur">${dur(v[6])}</span>`:""}<span class="pbtn" aria-hidden="true"></span>`, true)}</button>`;
-  const cm = c => { const st = tsSec(c[2]); return `<li class="tc"><p>${esc(c[2])}</p>${(c[6]||[]).map(r => `<p class="trep">↳ ${esc(r[0])} <span>· ${kNum(r[1])}</span></p>`).join("")}
+  const cm = c => { const st = tsSec(c[2]), w = aiC(c)?.w; return `<li class="tc"><p>${esc(c[2])}</p>${w?`<p class="twhy">💡 ${esc(w)}</p>`:""}${(c[6]||[]).map(r => `<p class="trep">↳ ${esc(r[0])} <span>· ${kNum(r[1])}</span></p>`).join("")}
     <div class="tcm"><span class="note">좋아요 ${kNum(c[3])}${c[4]?` · 답글 ${kNum(c[4])}`:""}</span>${st?`<button type="button" class="pill acc" data-lplay="${esc(vid)}" data-start="${st}">▶ ${ts(st)} 장면</button>`:""}
     <span class="trate" role="group" aria-label="호감도">${[[3,"🤣","최고"],[2,"🙂","괜찮"],[1,"😐","별로"]].map(([k,e,l]) => `<button type="button" data-rate="${esc(c[1])}" data-n="${k}" aria-pressed="${LGU.rate[c[1]]===k}" aria-label="${l}">${e}</button>`).join("")}</span></div></li>`; };
   const fresh = (Date.now() - Date.parse(v[2])) / 864e5 <= 7;
@@ -855,7 +863,7 @@ function todayCard(x, i, n){
     <div class="rcb">
       <div class="rwv">${fresh?`<span class="vbadge">새 영상</span> `:""}${esc(v[1])} · ${esc(v[4]||"")} · ${esc(String(v[2]||"").slice(5).replace("-","."))} · 조회 ${kNum(v[3])}</div>
       <div class="ttl">${esc(v[0])}</div>
-      ${v[8]?`<p class="tline">${esc(v[8])}</p>`:""}
+      ${aiV(vid)?.l ? `<p class="tline ai">${esc(aiV(vid).l)}</p>` : v[8]?`<p class="tline">${esc(v[8])}</p>`:""}
       <ol class="tcl">${cs.map(cm).join("")}</ol>
       <div class="tfoot"><a href="${watch(vid)}" target="_blank" rel="noopener">유튜브에서 보기</a><button type="button" class="linkb" data-tblock="${esc(chOf(v))}" data-name="${esc(v[1])}">이 채널 그만 보기</button></div>
     </div>
