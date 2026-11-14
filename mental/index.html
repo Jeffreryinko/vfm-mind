@@ -724,6 +724,7 @@ function viewLog(){
 function openCard(id){
   const u = useById(id); if(!u) return;
   if(!$("#sheetHost").innerHTML && !(history.state && history.state.vfmSheet)) pushLayer("vfmSheet");
+  try{(window.vfm&&vfm.trail?vfm.trail:function(o){(window.__vfmTQ=window.__vfmTQ||[]).push(o)})({ id: u.id, app: "mental", kind: "tech", t: "멘탈 · " + u.name, u: location.pathname })}catch(e){}
   $("#sheetHost").innerHTML = `<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(u.name)}"><div class="grab"><b>${esc(u.id)}</b><button class="x" type="button" data-close>닫기</button></div><div class="body">${fullCard(u)}<button class="btn ghost" type="button" data-today="${esc(u.id)}">이 기술을 오늘 훈련으로</button></div></div>`;
   $("#sheetHost .x").focus();
 }
