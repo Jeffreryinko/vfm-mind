@@ -76,6 +76,7 @@ p{margin:0}
 .banner{border-radius:var(--r);padding:11px 14px;font-size:13.5px;background:var(--coin-soft)}
 .banner b{color:var(--coin);margin-right:6px}
 .no{font-family:var(--f-mono);font-size:12px;color:var(--accent);font-weight:500}
+.tdeep{margin-top:10px}.tdeep .body{display:grid;gap:10px}.lead2{margin:0;font-size:15.5px}.steps{margin:4px 0 0;padding-left:20px;display:grid;gap:4px}.mis{margin:4px 0 0;padding-left:18px}.life{margin:4px 0;font-size:14.5px;line-height:1.55}.dayn{color:var(--accent);margin-right:4px}.warnb{background:var(--warn-soft)!important;color:var(--warn)!important}
 .lbl{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.03em;margin-bottom:2px}
 .box{background:var(--sunk);border-radius:10px;padding:9px 11px;font-size:14px}
 .drill{background:var(--ok-soft);border-radius:10px;padding:10px 12px;font-size:14.5px}
@@ -316,6 +317,7 @@ function fullCard(u){
     <div class="drill"><div class="lbl">훈련</div>${esc(u.drill)}</div>
     <div class="risk"><div class="lbl">위험 · 윤리</div>${esc(u.risk)}</div>
     ${(() => { const ls = allLessons().filter(l => l.techs[0]===u.tech || l.techs.includes(u.tech)).sort((a,b) => (a.techs[0]===u.tech?0:1) - (b.techs[0]===u.tech?0:1)).slice(0,4); return ls.length ? `<div><div class="lbl">대가에게 배우기</div><div class="chips">${ls.map(l => `<button class="chip" type="button" data-lesson="${esc(l.k)}">${esc(l.m.name.split(" · ")[0])} · ${esc(l.n)}</button>`).join("")}</div></div>` : ""; })()}
+    ${techDeep(u.tech)}
     <div class="lenses">${["psy","phi","sci"].map(lensBox).join("")}</div>
     ${labFor(u)}
   </article>`;
@@ -357,6 +359,7 @@ function viewToday(){
     <div class="risk"><div class="lbl">지킬 것</div>${esc(u.risk)}</div>
     ${logUi}
     ${(() => { const ct = S.sc && courseToday(); return ct && ct.l ? `<h2 class="sec"><span class="n">${ct.no}/${ct.total}</span>오늘의 한 수 · ${esc(ct.l.m.name.split(" · ")[0])}</h2><article class="card"><h3>${esc(ct.l.n)}</h3>${comic(ct.l.cm)}<p>${esc(ct.l.what)}</p><button class="btn ghost" type="button" data-lesson="${esc(ct.l.k)}">수업 열기</button></article>` : ""; })()}
+    ${reviewBox()}
     <h2 class="sec"><span class="n">${esc(u.id)}</span>장면과 원리</h2>
     ${fullCard(u)}`;
 }
@@ -535,6 +538,51 @@ function viewLab(){
   if(S.scrollLab){ const el = document.getElementById("xp-"+S.scrollLab); S.scrollLab = null; if(el) setTimeout(() => el.scrollIntoView({block:"start"}), 30); }
 }
 function goLab(id){ if(!labBy(id)) return; closeSheet(); S.lensMode = "lab"; S.master = null; S.labF = "all"; S.labQ = ""; S.openLab = id; S.scrollLab = id; if(S.view==="lens") viewLens(); else go("lens"); }
+// ───────── 깊이 더하기 (mental/deep.js) ─────────
+const MD = () => window.MDEEP || {techs:{}, courses:[]};
+function techDeep(k){
+  const d = MD().techs[k], t = techOf(k); if(!d) return "";
+  return `<details class="cpt tdeep"><summary><span>🔎 이 기술 깊이 배우기 · ${esc(t?.n || k)}</span><span class="pill ${GR[d.ev]||""}">${esc((S.sc && S.sc.grades && S.sc.grades[d.ev] || [d.ev])[0])}</span></summary><div class="body">
+    <p class="lead2"><b>${esc(d.one)}</b></p>
+    <div class="lens on"><div class="lbl">왜 통하나 · 연구로 보면</div><p>${esc(d.why)}</p></div>
+    <div class="box"><div class="lbl">이렇게 해요 · 단계</div><ol class="steps">${d.steps.map(x => `<li>${esc(x)}</li>`).join("")}</ol></div>
+    <div><div class="lbl">생활에서는</div>${d.life.map(([a,b]) => `<p class="life"><b>${esc(a)}</b> ${esc(b)}</p>`).join("")}</div>
+    <div class="risk"><div class="lbl">흔한 착각</div><ul class="mis">${d.mis.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+    <div class="drill"><div class="lbl">3단계 연습</div>${d.drill.map(([a,b]) => `<p><b>${esc(a)}</b> · ${esc(b)}</p>`).join("")}</div>
+    <div class="risk"><div class="lbl">지킬 선</div>${esc(d.line)}</div>
+  </div></details>`;
+}
+function viewCourse(c){
+  const ls = c.lessons.map(lessonBy).filter(Boolean), dn = ls.filter(l => SU.done[l.k]).length, nx = ls.find(l => !SU.done[l.k]);
+  $("#v-lens").innerHTML = `<button class="chip" type="button" data-mcourse="">‹ 상황별 코스</button>
+    <div class="mhead"><p class="lead">${esc(c.n)}</p><p class="note">${esc(c.who)} · ${ls.length}일 · ${dn}개 해 봄</p></div>
+    <div class="card"><p>${esc(c.intro)}</p><div class="drill"><div class="lbl">이 상황의 한 줄 비결</div>${esc(c.tip)}</div></div>
+    ${nx ? `<article class="card acc"><div class="lbl">다음 수업 · ${ls.indexOf(nx)+1}일째</div><h3>${esc(nx.n)}</h3><p class="note">${esc(nx.m.name)}</p><p>${esc(nx.what)}</p></article>` : `<div class="card"><p class="note">이 코스를 다 했어요 ✓ '오늘' 화면의 복습에서 다시 만나요.</p></div>`}
+    <h2 class="sec"><span class="n">${ls.length}개</span>수업 순서</h2>
+    ${ls.map((l,i) => lessonHtml(l, S.openLesson===l.k).replace('<span>', `<span><b class="dayn">${i+1}일</b> `)).join("")}`;
+}
+// 복습: 해 본 수업을 1·3·7·14·30일 간격으로 다시 만나기 (SU.rv = {k:{st 단계, at 다음 날짜}})
+const RVI = [1,3,7,14,30];
+function rvDue(){ SU.rv = SU.rv || {}; return Object.keys(SU.done).filter(k => lessonBy(k)).map(k => { const r = SU.rv[k] || {st:0, at: addDays(SU.done[k], RVI[0])}; return {k, r}; }).filter(x => x.r.at <= TODAY && x.r.st < RVI.length).sort((a,b) => a.r.at.localeCompare(b.r.at)); }
+function quizFor(k){
+  const l = lessonBy(k); if(!l) return null; const all = allLessons().filter(x => x.k!==k);
+  const seed = (k + TODAY).split("").reduce((a,c) => a*31 + c.charCodeAt(0) >>> 0, 7);
+  const pick = []; for(let i=0; pick.length<3 && i<50; i++){ const x = all[(seed + i*17) % all.length]; if(!pick.includes(x)) pick.push(x); }
+  const opts = [l, ...pick].sort((a,b) => ((a.k+seed).length*7 + a.k.charCodeAt(1)) % 5 - ((b.k+seed).length*7 + b.k.charCodeAt(1)) % 5);
+  const q = l.say && l.say.length ? `"${l.say[seed % l.say.length]}" — 이 말은 어떤 수업에서 배웠을까요?` : `'${l.what.slice(0,60)}…' — 어떤 수업일까요?`;
+  return {l, q, opts};
+}
+function reviewBox(){
+  if(!S.sc) return ""; const due = rvDue(); if(!due.length){ const n = Object.keys(SU.done).length; return n ? `<h2 class="sec"><span class="n">✓</span>복습</h2><div class="card"><p class="note">오늘 복습할 수업은 없어요. 해 본 수업 ${n}개가 1·3·7·14·30일 간격으로 다시 찾아와요.</p></div>` : ""; }
+  const x = due[0], qz = quizFor(x.k); if(!qz) return "";
+  const a = S.rvAns && S.rvAns.k===x.k ? S.rvAns : null;
+  return `<h2 class="sec"><span class="n">${due.length}개</span>오늘의 복습</h2><article class="card acc rvq">
+    <div class="lbl">${x.r.st+1}번째 복습 · ${esc(qz.l.m.name.split(" · ")[0])}</div><p><b>${esc(qz.q)}</b></p>
+    <div class="stack">${qz.opts.map(o => `<button class="btn ${a ? (o.k===x.k ? "okb" : (a.pick===o.k ? "warnb" : "ghost")) : "ghost"}" type="button" data-rvpick="${esc(x.k)}|${esc(o.k)}" ${a?"disabled":""}>${esc(o.n)}</button>`).join("")}</div>
+    ${a ? `<div class="drill" style="margin-top:8px"><div class="lbl">${a.pick===x.k ? "맞았어요 ✓" : "정답은 '" + esc(qz.l.n) + "'"}</div>${esc(qz.l.what)}<p style="margin-top:6px"><b>다시 해볼 것</b> · ${esc(qz.l.drill)}</p></div>
+      <div class="btnrow"><button class="btn okb" type="button" data-rvnext="${esc(x.k)}|1">기억났어요 → 다음은 더 나중에</button><button class="btn ghost" type="button" data-rvnext="${esc(x.k)}|0">헷갈려요 → 내일 다시</button></div>` : ""}
+  </article>`;
+}
 function courseToday(){
   const seq = (S.sc?.course||[]).flatMap(([w, ks]) => ks.map(k => ({w, k})));
   const i = seq.findIndex(x => !SU.done[x.k]);
@@ -578,6 +626,8 @@ function viewSchool(){
   if(!S.sc){ box.innerHTML = `<p class="lead">수업</p>${lensSeg()}<p class="note">${S.sc===false ? "수업 자료를 불러오지 못했어요. 새로고침해 주세요." : "수업을 불러오는 중이에요…"}</p>`; return; }
   const m = S.master && S.sc.masters.find(x => x.k===S.master);
   if(m){ viewMaster(m); return; }
+  const mc = S.mcourse && MD().courses.find(x => x.k===S.mcourse);
+  if(mc){ viewCourse(mc); return; }
   const all = allLessons(), dn = all.filter(l => SU.done[l.k]).length, ct = courseToday();
   const cnt = k => all.filter(l => l.ev===k).length;
   box.innerHTML = `
@@ -585,6 +635,8 @@ function viewSchool(){
     <p class="note">에릭슨부터 FBI 협상가까지 ${S.sc.masters.length}명, 수업 ${all.length}개예요. 수업마다 '이렇게 말해요 · 오늘 해볼 것 · 근거'가 한 장에 있고, 근거가 약하거나 반박된 것도 숨기지 않고 표시했어요.</p>
     <div class="top"><span class="pill ${dn?"ok":""}">${dn} / ${all.length} 해 봄</span>${Object.entries(S.sc.grades).map(([k,g]) => `<span class="pill ${GR[k]}">${esc(g[0])} ${cnt(k)}</span>`).join("")}</div>
     ${ct && ct.l ? `<article class="card acc"><div class="lbl">4주 코스 · ${esc(ct.w)} · ${ct.no}/${ct.total}</div><h3>${esc(ct.l.n)}</h3><p class="note">${esc(ct.l.m.name)}</p>${comic(ct.l.cm)}<div class="drill"><div class="lbl">오늘 해볼 것</div>${esc(ct.l.drill)}</div><button class="btn" type="button" data-lesson="${esc(ct.l.k)}">수업 열기</button></article>` : `<div class="card"><p class="note">4주 코스를 다 했어요. 아래에서 남은 수업을 골라 보세요.</p></div>`}
+    <h2 class="sec"><span class="n">${MD().courses.length}개</span>상황별 코스</h2>
+    <div class="stack">${MD().courses.map(c => { const d = c.lessons.filter(k => SU.done[k]).length; return `<button class="mcard" type="button" data-mcourse="${esc(c.k)}"><span class="mtx"><span class="t">${esc(c.n)}</span><span class="m">${esc(c.who)}</span><span class="o">${esc(c.intro)}</span><span class="m">${c.lessons.length}일${d?` · ${d}개 해 봄`:""} ›</span></span></button>`; }).join("")}</div>
     <h2 class="sec"><span class="n">${S.sc.masters.length}명</span>대가</h2>
     <div class="stack">${S.sc.masters.map(masterCard).join("")}</div>
 `;
@@ -719,6 +771,9 @@ document.addEventListener("click", e => {
   const ms = t.closest("[data-master]"); if(ms){ const k = ms.dataset.master || null;
     if(!k){ if(history.state && history.state.vfmMaster) history.back(); else { S.master = null; viewLens(); window.scrollTo(0, S.masterY||0); } return; }
     S.masterY = window.scrollY; S.master = k; pushLayer("vfmMaster"); viewLens(); window.scrollTo(0,0); return; }
+  const mcb = t.closest("[data-mcourse]"); if(mcb){ S.mcourse = mcb.dataset.mcourse || null; S.master = null; S.lensMode = "school"; if(S.view==="lens") viewLens(); else go("lens"); window.scrollTo(0,0); return; }
+  const rp = t.closest("[data-rvpick]"); if(rp){ const [k, pick] = rp.dataset.rvpick.split("|"); S.rvAns = {k, pick}; viewToday(); return; }
+  const rn = t.closest("[data-rvnext]"); if(rn){ const [k, ok] = rn.dataset.rvnext.split("|"); SU.rv = SU.rv || {}; const r = SU.rv[k] || {st:0}; if(ok==="1"){ r.st++; r.at = r.st < RVI.length ? addDays(TODAY, RVI[r.st]) : "9999-12-31"; } else { r.at = addDays(TODAY, 1); } SU.rv[k] = r; saveSU(); S.rvAns = null; toast(ok==="1" ? "좋아요! 다음 복습은 더 나중에" : "내일 다시 만나요"); viewToday(); return; }
   const ls = t.closest("[data-lesson]"); if(ls){ goLesson(ls.dataset.lesson); return; }
   const ld = t.closest("[data-ldone]"); if(ld){ const k = ld.dataset.ldone; if(SU.done[k]) delete SU.done[k]; else { SU.done[k] = TODAY; toast("기록했어요"); } saveSU(); S.openLesson = k; if(S.view==="lens") viewLens(); else render(); return; }
   const l = t.closest("[data-lens]"); if(l){ S.lens = l.dataset.lens; viewLens(); return; }
@@ -820,6 +875,7 @@ boot();
 <script src="../assets/wikithumb.js"></script>
 <script src="../assets/wikigal.js"></script>
 <script src="art.js?v=1"></script>
+<script src="deep.js?v=1"></script>
 <script src="../assets/shell.js"></script>
 </body>
 </html>
